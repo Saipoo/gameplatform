@@ -1104,7 +1104,8 @@
             cursor: pointer;
             transition: all .2s;
             font-size: .95rem;
-            text-align: left
+            text-align: left;
+            color: var(--text)
         }
 
         .trivia-opt:hover {
@@ -1730,6 +1731,102 @@
                 font-size: 2rem
             }
         }
+
+        /* ── CANVAS GAME STYLES ── */
+        .game-canvas-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto;
+            aspect-ratio: 4/3;
+            background: #0f111a;
+            border: 2px solid var(--border);
+            border-radius: var(--radius2);
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+        }
+        .game-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+            background: transparent;
+        }
+        .game-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(15, 17, 26, 0.85);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            z-index: 10;
+            opacity: 1;
+            transition: opacity 0.3s;
+        }
+        .game-overlay.hidden {
+            display: none;
+            opacity: 0;
+            pointer-events: none;
+        }
+        @keyframes correct-flash {
+            0%, 100% { background: var(--surface); border-color: var(--border); }
+            20%, 80% { background: rgba(34, 197, 94, 0.2); border-color: var(--green); }
+        }
+        @keyframes wrong-shake {
+            0%, 100% { transform: translateX(0); }
+            20%, 60% { transform: translateX(-6px); }
+            40%, 80% { transform: translateX(6px); }
+        }
+        .trivia-opt.correct-anim {
+            animation: correct-flash 0.8s ease-in-out;
+        }
+        .trivia-opt.wrong-anim {
+            animation: wrong-shake 0.4s ease-in-out;
+            border-color: var(--red);
+            background: rgba(239, 68, 68, 0.1);
+        }
+        @keyframes score-pop {
+            0% { transform: scale(1); filter: drop-shadow(0 0 0px var(--lime)); }
+            50% { transform: scale(1.3); filter: drop-shadow(0 0 8px var(--lime)); }
+            100% { transform: scale(1); filter: drop-shadow(0 0 0px var(--lime)); }
+        }
+        .score-pop-active {
+            animation: score-pop 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            display: inline-block;
+        }
+        .game-card {
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+        }
+        .game-card::after {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 45%,
+                rgba(255, 255, 255, 0.1) 50%,
+                transparent 55%
+            );
+            transform: rotate(-45deg) translate(-100%, -100%);
+            transition: transform 0.6s ease;
+            pointer-events: none;
+        }
+        .game-card:hover::after {
+            transform: rotate(-45deg) translate(100%, 100%);
+        }
+        .game-card:hover {
+            transform: translateY(-5px) scale(1.02);
+            box-shadow: 0 12px 25px rgba(124, 58, 237, 0.25);
+            border-color: var(--violet);
+        }
     </style>
 </head>
 
@@ -1797,6 +1894,8 @@
             <button class="cat-btn" data-cat="puzzle">🧩 Puzzle</button>
             <button class="cat-btn" data-cat="quiz">🧠 Quiz & Trivia</button>
             <button class="cat-btn" data-cat="action">⚡ Action</button>
+            <button class="cat-btn" data-cat="arcade">🕹️ Arcade</button>
+            <button class="cat-btn" data-cat="sports">⚽ Sports</button>
             <button class="cat-btn" data-cat="word">📝 Word Games</button>
             <button class="cat-btn" data-cat="memory">🎭 Memory</button>
             <button class="cat-btn" data-cat="party">🎉 Party Fun</button>
@@ -1964,7 +2063,7 @@
                 <div class="profile-avatar-big" id="profile-avatar">🎮</div>
                 <h2 class="text-2xl font-bold" id="profile-name">Guest</h2>
                 <div class="text-sm mt-2" style="color:var(--text2)" id="profile-joined">Join to see your stats</div>
-                <div class="stats-grid">
+                <div class="stats-grid" style="grid-template-columns: repeat(4, 1fr); max-width: 480px;">
                     <div class="stat-box">
                         <div class="val" id="profile-wins">0</div>
                         <div class="key">Wins</div>
@@ -1974,10 +2073,25 @@
                         <div class="key">Losses</div>
                     </div>
                     <div class="stat-box">
+                        <div class="val" id="profile-winrate">0%</div>
+                        <div class="key">Win Rate</div>
+                    </div>
+                    <div class="stat-box">
                         <div class="val" id="profile-xp">0</div>
                         <div class="key">XP</div>
                     </div>
                 </div>
+
+                <div class="xp-container" style="margin-top: 24px; max-width: 480px; margin-left: auto; margin-right: auto; text-align: left; background: var(--surface); border: 1px solid var(--border); padding: 16px; border-radius: var(--radius)">
+                    <div class="flex justify-between text-xs" style="justify-content: space-between; display: flex; margin-bottom: 6px; color: var(--text2)">
+                        <span id="profile-level-label" style="font-weight: bold; color: var(--text)">Level 1</span>
+                        <span id="profile-xp-label">0 / 100 XP</span>
+                    </div>
+                    <div class="xp-bar" style="width: 100%; height: 8px; background: var(--border); border-radius: 99px; overflow: hidden">
+                        <div id="profile-xp-progress" style="width: 0%; height: 100%; background: linear-gradient(90deg, var(--violet), var(--cyan)); transition: width 0.4s ease-out"></div>
+                    </div>
+                </div>
+
                 <div class="flex gap-2 justify-center mt-4">
                     <button class="btn btn-outline btn-sm" onclick="openModal('edit-profile-modal')">✏️ Edit
                         Profile</button>
@@ -2101,6 +2215,11 @@
                             <option value="truth_dare">🎯 Truth or Dare</option>
                             <option value="drawing">🎨 Draw & Guess</option>
                             <option value="cannon">💣 Cannon War</option>
+                            <option value="flappy">🐦 Flappy Bird</option>
+                            <option value="football">⚽ Penalty Shootout</option>
+                            <option value="carrace">🚗 Car Racing</option>
+                            <option value="colorswitch">🎨 Color Switch</option>
+                            <option value="minigolf">🏌️ Mini Golf</option>
                         </select>
                     </div>
                     <div class="input-group">
@@ -2169,6 +2288,24 @@
         </div>
     </div>
 
+    <!-- Solo Difficulty Selector Modal -->
+    <div class="modal-overlay hidden" id="solo-difficulty-modal">
+        <div class="modal" style="max-width:320px">
+            <div class="modal-header">
+                <h3 class="text-lg font-bold" id="solo-title">Play vs Bot</h3>
+                <button class="btn-icon" onclick="closeModal('solo-difficulty-modal')">✕</button>
+            </div>
+            <div class="modal-body text-center">
+                <p class="text-sm mb-4" style="color:var(--text2)">Select Bot Difficulty:</p>
+                <div class="flex flex-direction-col gap-2" style="flex-direction:column">
+                    <button class="btn btn-outline" style="border-color:var(--green);color:var(--green);background:rgba(34,197,94,.05)" onclick="startSoloGame('normal')">🟢 Normal</button>
+                    <button class="btn btn-outline" style="border-color:var(--yellow);color:var(--yellow);background:rgba(202,138,4,.05)" onclick="startSoloGame('medium')">🟡 Medium</button>
+                    <button class="btn btn-outline" style="border-color:var(--red);color:var(--red);background:rgba(220,38,38,.05)" onclick="startSoloGame('hard')">🔴 Hard</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- ════════════════════════════════════════════
      JAVASCRIPT
 ═════════════════════════════════════════════ -->
@@ -2204,6 +2341,11 @@
             { id: 'crossword', name: 'Crossword', emoji: '📰', desc: 'Collaborative mini crossword puzzle. Fill in the grid!', cat: 'word', players: '2-4', color: '#3f3f46', bg: 'linear-gradient(135deg,#3f3f46,#52525b)', rules: 'Work together or race to fill the crossword. Read the across and down clues. Click a cell to type your letter. Complete the grid to win!' },
             { id: 'truth_dare', name: 'Truth or Dare', emoji: '🎯', desc: 'The classic party game — choose truth or dare and see what happens!', cat: 'party', players: '3-8', color: '#7f1d1d', bg: 'linear-gradient(135deg,#7f1d1d,#b91c1c)', rules: 'Each player takes turns choosing TRUTH or DARE. Truth players must answer honestly. Dare players must complete the challenge. All in good fun!' },
             { id: 'drawing', name: 'Draw & Guess', emoji: '🎨', desc: 'One player draws, others guess the word. Like Pictionary!', cat: 'party', players: '3-8', color: '#14532d', bg: 'linear-gradient(135deg,#14532d,#166534)', rules: 'One player is the artist and draws a secret word. Other players type their guesses in the chat. Correct guess earns points for both guesser and artist!' },
+            { id: 'flappy', name: 'Flappy Bird', emoji: '🐦', desc: 'Flap through obstacles. Don\'t crash!', cat: 'arcade', players: '2-4', color: '#0f766e', bg: 'linear-gradient(135deg,#0f766e,#0d9488)', rules: 'Tap space or click to flap. Avoid the green pipes! Compete for the highest score or distance. Best score wins!' },
+            { id: 'football', name: 'Penalty Shootout', emoji: '⚽', desc: 'Aim, select power, and shoot. Or defend the goal!', cat: 'sports', players: '2', color: '#15803d', bg: 'linear-gradient(135deg,#15803d,#22c55e)', rules: 'Take turns as kicker and goalkeeper. Aim and select power to kick, or move goalkeeper to block. Best out of 5 rounds wins!' },
+            { id: 'carrace', name: 'Car Racing', emoji: '🚗', desc: 'Top-down arcade racing. Steer your way to the finish line!', cat: 'arcade', players: '2', color: '#b91c1c', bg: 'linear-gradient(135deg,#b91c1c,#ef4444)', rules: 'Use Left/Right arrow keys to steer, Up/Down to accelerate/reverse. Complete laps while avoiding obstacles. Fastest lap wins!' },
+            { id: 'colorswitch', name: 'Color Switch', emoji: '🎨', desc: 'Bounce the ball matching the rotating color ring pattern.', cat: 'arcade', players: '2', color: '#a21caf', bg: 'linear-gradient(135deg,#a21caf,#d946ef)', rules: 'Tap space or click to jump. The ball can only pass through the matching color of the rotating circle. Get as far as you can!' },
+            { id: 'minigolf', name: 'Mini Golf', emoji: '🏌️', desc: 'Drag, aim, and release to putt the golf ball into the hole.', cat: 'sports', players: '2-4', color: '#047857', bg: 'linear-gradient(135deg,#047857,#10b981)', rules: 'Drag back from the ball to set power and direction, then release to shoot. Try to get the ball into the hole in the fewest strokes across 5 holes!' }
         ];
 
         // ── INIT ────────────────────────────────────
@@ -2228,7 +2370,9 @@
             }
             if (p === 'leaderboard') loadLeaderboard('global');
             if (p === 'lobby') loadRooms();
-            if (p === 'profile' && currentUser) renderProfile();
+            if (p === 'profile' && currentUser) {
+                api('/users/me').then(u => { currentUser = u; localStorage.setItem('pz_user', JSON.stringify(u)); renderProfile(); }).catch(() => renderProfile());
+            }
         }
 
         // ── GAME GRID ────────────────────────────────
@@ -2243,16 +2387,19 @@
         <div class="game-card-title">${g.name}</div>
         <div class="game-card-desc">${g.desc}</div>
       </div>
-      <div class="game-card-footer">
+      <div class="game-card-footer" style="display:flex;justify-content:space-between;align-items:center;width:100%;margin-top:auto">
         <div class="player-count">👥 ${g.players}</div>
-        <span class="badge badge-violet">${catLabel(g.cat)}</span>
+        <div style="display:flex;gap:6px;align-items:center">
+          <button class="btn btn-outline btn-sm" style="padding:4px 8px;font-size:0.75rem;border-color:var(--violet);color:var(--violet)" onclick="event.stopPropagation();openSoloSelector('${g.id}')">🤖 Solo</button>
+          <span class="badge badge-violet">${catLabel(g.cat)}</span>
+        </div>
       </div>
     </div>
   `).join('');
         }
 
         function catLabel(c) {
-            const m = { card: 'Card', action: 'Action', quiz: 'Quiz', memory: 'Memory', word: 'Word', party: 'Party', puzzle: 'Puzzle' };
+            const m = { card: 'Card', action: 'Action', quiz: 'Quiz', memory: 'Memory', word: 'Word', party: 'Party', puzzle: 'Puzzle', arcade: 'Arcade', sports: 'Sports' };
             return m[c] || c;
         }
 
@@ -2265,6 +2412,184 @@
                     renderGameGrid(cat === 'all' ? GAMES : GAMES.filter(g => g.cat === cat));
                 });
             });
+        }
+
+        // ── SOLO / BOT STATE & CONFIG ─────────────────
+        let isSoloMode = false;
+        let botDifficulty = 'normal';
+        let soloGameId = null;
+        let soloInterval = null;
+
+        function openSoloSelector(gameId) {
+            soloGameId = gameId;
+            const g = GAMES.find(x => x.id === gameId);
+            if (!g) return;
+            document.getElementById('solo-title').textContent = `Play vs Bot: ${g.name}`;
+            openModal('solo-difficulty-modal');
+        }
+
+        function startSoloGame(difficulty) {
+            closeModal('solo-difficulty-modal');
+            isSoloMode = true;
+            botDifficulty = difficulty;
+            if (soloInterval) { clearInterval(soloInterval); soloInterval = null; }
+
+            // Mock currentUser if not logged in
+            if (!currentUser) {
+                currentUser = { id: 'player-1', username: 'Guest Player', avatar: '🎮', level: 1, xp: 0, wins: 0, losses: 0 };
+            }
+
+            // Create a fake room and game state
+            currentRoom = {
+                code: 'SOLO',
+                gameType: soloGameId,
+                hostId: currentUser.id,
+                maxPlayers: 2,
+                players: [
+                    { id: currentUser.id, name: currentUser.username, avatar: currentUser.avatar || '🎮', ready: true },
+                    { id: 'bot-1', name: `Bot 🤖 (${difficulty.toUpperCase()})`, avatar: '🤖', ready: true }
+                ]
+            };
+
+            currentGame = {
+                type: soloGameId,
+                players: [currentUser.id, 'bot-1'],
+                state: initSoloGameState(soloGameId)
+            };
+
+            launchGame(soloGameId, currentGame.state, currentRoom.players);
+        }
+
+        function initSoloGameState(gameId) {
+            const state = {
+                players: [currentUser.id, 'bot-1'],
+                currentPlayer: currentUser.id,
+                scores: { [currentUser.id]: 0, 'bot-1': 0 }
+            };
+
+            switch (gameId) {
+                case 'uno':
+                    state.deck = [];
+                    const colors = ['red', 'blue', 'green', 'yellow'];
+                    for (let c of colors) {
+                        for (let v = 0; v <= 9; v++) state.deck.push({ color: c, value: v.toString() });
+                        state.deck.push({ color: c, value: 'skip' });
+                        state.deck.push({ color: c, value: 'reverse' });
+                        state.deck.push({ color: c, value: 'draw2' });
+                    }
+                    for (let i = 0; i < 4; i++) {
+                        state.deck.push({ color: 'wild', value: 'wild' });
+                        state.deck.push({ color: 'wild', value: 'wild4' });
+                    }
+                    state.deck.sort(() => Math.random() - 0.5);
+                    state.discard = [state.deck.pop()];
+                    while (state.discard[0].color === 'wild') {
+                        state.discard[0] = state.deck.pop();
+                    }
+                    state.hands = {
+                        [currentUser.id]: Array(7).fill(0).map(() => state.deck.pop()),
+                        'bot-1': Array(7).fill(0).map(() => state.deck.pop())
+                    };
+                    break;
+
+                case 'cannon':
+                    state.players = [
+                        { id: currentUser.id, health: 100, angle: 45, power: 50 },
+                        { id: 'bot-1', health: 100, angle: 45, power: 50 }
+                    ];
+                    state.wind = (Math.random() * 10 - 5);
+                    state.projectileTypes = ['🚀 rocket', '💣 bomb', '⚡ lightning', '🔥 fireball', '☄️ meteor'];
+                    state.currentProjIndex = 0;
+                    break;
+
+                case 'trivia':
+                    state.round = 0;
+                    state.totalRounds = 5;
+                    state.questions = [
+                        { q: 'What is the capital of France?', options: ['Berlin', 'Madrid', 'Paris', 'Rome'], answer: 2 },
+                        { q: 'Which planet is known as the Red Planet?', options: ['Venus', 'Mars', 'Jupiter', 'Saturn'], answer: 1 },
+                        { q: 'What is the largest mammal on Earth?', options: ['Elephant', 'Blue Whale', 'Giraffe', 'Shark'], answer: 1 },
+                        { q: 'Who wrote "Romeo and Juliet"?', options: ['Shakespeare', 'Hemingway', 'Mark Twain', 'Dickens'], answer: 0 },
+                        { q: 'What is 5 + 7 * 2?', options: ['24', '19', '17', '14'], answer: 1 }
+                    ];
+                    state.currentQuestion = state.questions[0];
+                    state.answers = {};
+                    break;
+
+                case 'memory':
+                    const emojis = ['🍎', '🍌', '🍒', '🍇', '🍉', '🍍', '🥝', '🍓'];
+                    const cards = [...emojis, ...emojis].sort(() => Math.random() - 0.5);
+                    state.cards = cards.map((emoji, idx) => ({ id: idx, emoji, flipped: false, matched: false }));
+                    state.flipped = [];
+                    state.scores = { [currentUser.id]: 0, 'bot-1': 0 };
+                    state.botMemory = {};
+                    break;
+
+                case 'riddle':
+                    state.round = 0;
+                    state.riddles = [
+                        { q: 'What has to be broken before you can use it?', a: 'egg' },
+                        { q: 'I am full of holes but still hold water. What am I?', a: 'sponge' },
+                        { q: 'What has hands but cannot clap?', a: 'clock' },
+                        { q: 'What gets wetter the more it dries?', a: 'towel' },
+                        { q: 'What has a head and a tail but no body?', a: 'coin' }
+                    ];
+                    state.answers = {};
+                    break;
+
+                case 'jumble':
+                    state.round = 0;
+                    state.words = [
+                        { jumbled: 'ELPPA', answer: 'APPLE' },
+                        { jumbled: 'ANANAB', answer: 'BANANA' },
+                        { jumbled: 'ERANGE', answer: 'ORANGE' },
+                        { jumbled: 'YTERRP', answer: 'PRETTY' },
+                        { jumbled: 'ENZOLY', answer: 'YELLOW' }
+                    ];
+                    break;
+
+                case 'mathquiz':
+                    state.round = 0;
+                    state.questions = [
+                        { q: '12 + 15 = ?', a: '27' },
+                        { q: '45 - 19 = ?', a: '26' },
+                        { q: '6 * 8 = ?', a: '48' },
+                        { q: '81 / 9 = ?', a: '9' },
+                        { q: '15 * 3 - 5 = ?', a: '40' }
+                    ];
+                    break;
+
+                case 'crossword':
+                    state.grid = Array(5).fill(0).map(() => Array(5).fill(''));
+                    state.clues = [
+                        { type: 'across', num: 1, x: 0, y: 0, word: 'APPLE', clue: 'Red or green fruit' },
+                        { type: 'down', num: 1, x: 0, y: 0, word: 'ABOUT', clue: 'Approximately' }
+                    ];
+                    break;
+
+                case 'truth_dare':
+                    state.currentPlayer = currentUser.id;
+                    state.truthList = [
+                        'What is your biggest fear?',
+                        'What is the most embarrassing thing you have done?',
+                        'Who is your secret crush?',
+                        'What is the biggest lie you have ever told?'
+                    ];
+                    state.dareList = [
+                        'Do 10 pushups!',
+                        'Sing a song out loud!',
+                        'Do your best chicken impression!',
+                        'Dance for 30 seconds without music!'
+                    ];
+                    break;
+
+                case 'drawing':
+                    state.word = 'CAT';
+                    state.drawerId = currentUser.id;
+                    break;
+            }
+
+            return state;
         }
 
         function openGameInfo(gameId) {
@@ -2529,7 +2854,10 @@
         }
 
         function leaveRoom() {
-            if (currentRoom) socket.emit('leave_room', { code: currentRoom.code });
+            cleanupSoloGame();
+            if (currentRoom && socket && socket.connected && currentRoom.code !== 'SOLO') {
+                socket.emit('leave_room', { code: currentRoom.code });
+            }
             currentRoom = null;
             showPage('lobby');
         }
@@ -2571,6 +2899,15 @@
             const inp = document.getElementById('game-chat-input');
             const msg = inp.value.trim();
             if (!msg) return;
+            if (isSoloMode) {
+                if (currentGame?.type === 'drawing') {
+                    handleSoloDrawGuess(msg);
+                } else {
+                    addChatMsg(currentUser.username, msg);
+                }
+                inp.value = '';
+                return;
+            }
             if (currentGame?.type === 'drawing') {
                 socket.emit('draw_guess', { code: currentRoom.code, guess: msg });
             } else {
@@ -2594,6 +2931,8 @@
             const g = GAMES.find(g => g.id === type);
             document.getElementById('game-title').textContent = g?.emoji + ' ' + g?.name;
             currentGame = { type, state, players };
+            const chat = document.getElementById('game-chat');
+            if (chat) chat.innerHTML = '';
 
             switch (type) {
                 case 'uno': renderUno(state); break;
@@ -2606,6 +2945,23 @@
                 case 'crossword': renderCrossword(state); break;
                 case 'truth_dare': renderTruthDare(state); break;
                 case 'drawing': renderDrawing(state); break;
+                case 'flappy': renderFlappy(state); break;
+                case 'football': renderFootball(state); break;
+                case 'carrace': renderCarRace(state); break;
+                case 'colorswitch': renderColorSwitch(state); break;
+                case 'minigolf': renderMiniGolf(state); break;
+            }
+
+            if (isSoloMode) {
+                if (type === 'trivia') triggerTriviaBot();
+                else if (type === 'riddle') triggerRiddleBot();
+                else if (type === 'jumble') triggerJumbleBot();
+                else if (type === 'mathquiz') triggerMathBot();
+                else if (type === 'uno') checkSoloBotTurn();
+                else if (type === 'drawing') {
+                    if (state.drawerId === currentUser.id) triggerDrawingBotGuess();
+                    else runSoloDrawingBot();
+                }
             }
         }
 
@@ -2657,9 +3013,13 @@
         }
 
         function playUnoCard(idx) {
+            if (isSoloMode) {
+                handleSoloUnoPlay(idx);
+                return;
+            }
             const card = currentGame.state.hands[currentUser?.id][idx];
-            if (card.color === 'wild') {
-                pendingUnoCard = card;
+            if (card.color === 'wild' || card.color === 'wild4') {
+                pendingUnoCard = idx;
                 openModal('color-picker-modal');
             } else {
                 socket.emit('uno_play', { code: currentRoom.code, card });
@@ -2668,14 +3028,23 @@
 
         function chooseUnoColor(color) {
             closeModal('color-picker-modal');
-            if (pendingUnoCard) {
-                socket.emit('uno_play', { code: currentRoom.code, card: pendingUnoCard, chosenColor: color });
+            if (isSoloMode) {
+                handleSoloUnoPlay(pendingUnoCard, color);
+                return;
+            }
+            if (pendingUnoCard !== null) {
+                const card = currentGame.state.hands[currentUser?.id][pendingUnoCard];
+                socket.emit('uno_play', { code: currentRoom.code, card, chosenColor: color });
                 pendingUnoCard = null;
             }
         }
 
         function drawUnoCard() {
             if (currentGame.state.currentPlayer !== currentUser?.id) return;
+            if (isSoloMode) {
+                handleSoloUnoDraw();
+                return;
+            }
             socket.emit('uno_draw', { code: currentRoom.code });
         }
 
@@ -2703,6 +3072,10 @@
         }
 
         function flipMemCard(id) {
+            if (isSoloMode) {
+                handleSoloMemoryFlip(id);
+                return;
+            }
             socket.emit('memory_flip', { code: currentRoom.code, cardId: id });
         }
 
@@ -2750,9 +3123,19 @@
             const q = currentGame.state.questions[currentGame.state.current];
             document.querySelectorAll('.trivia-opt').forEach((btn, idx) => {
                 btn.onclick = null;
-                if (idx === q.a) btn.classList.add('correct');
-                if (idx === i && i !== q.a) btn.classList.add('wrong');
+                if (idx === q.a) {
+                    btn.classList.add('correct');
+                    btn.classList.add('correct-anim');
+                }
+                if (idx === i && i !== q.a) {
+                    btn.classList.add('wrong');
+                    btn.classList.add('wrong-anim');
+                }
             });
+            if (isSoloMode) {
+                handleSoloTriviaAnswer(currentUser.id, i);
+                return;
+            }
             socket.emit('trivia_answer', { code: currentRoom.code, answerIdx: i });
         }
 
@@ -2778,6 +3161,11 @@
         function submitRiddle() {
             const val = document.getElementById('riddle-input')?.value.trim();
             if (!val) return;
+            if (isSoloMode) {
+                handleSoloRiddleGuess(val);
+                document.getElementById('riddle-input').value = '';
+                return;
+            }
             socket.emit('riddle_guess', { code: currentRoom.code, guess: val });
             document.getElementById('riddle-input').value = '';
         }
@@ -2803,6 +3191,11 @@
         function submitJumble() {
             const val = document.getElementById('jumble-input')?.value.trim();
             if (!val) return;
+            if (isSoloMode) {
+                handleSoloJumbleGuess(val);
+                document.getElementById('jumble-input').value = '';
+                return;
+            }
             socket.emit('jumble_guess', { code: currentRoom.code, guess: val });
             document.getElementById('jumble-input').value = '';
         }
@@ -2829,6 +3222,11 @@
         function submitMath() {
             const val = document.getElementById('math-input')?.value.trim();
             if (val === '') return;
+            if (isSoloMode) {
+                handleSoloMathAnswer(val);
+                document.getElementById('math-input').value = '';
+                return;
+            }
             socket.emit('math_answer', { code: currentRoom.code, answer: parseInt(val) });
             document.getElementById('math-input').value = '';
         }
@@ -2885,45 +3283,65 @@
         }
 
         // ── CANNON WAR ───────────────────────────────
+        let cannonCanvas = null;
+        let cannonCtx = null;
+        let cannonParticles = [];
+        let cannonAnimationId = null;
+        let cannonProjectile = null;
+        let prevCannonState = null;
+        let targetHealths = [100, 100];
+        let displayHealths = [100, 100];
+        let cannonShakes = [0, 0];
+
         function renderCannon(state) {
             currentGame.state = state;
             const myPlayer = state.players?.find(p => p.id === currentUser?.id);
-            const opponent = state.players?.find(p => p.id !== currentUser?.id);
             const isMyTurn = state.currentPlayer === currentUser?.id;
 
             document.getElementById('game-turn-badge').textContent = isMyTurn ? '🟢 Fire!' : '⏳ Enemy turn';
 
+            // Check if someone fired by comparing turn or health change
+            if (prevCannonState) {
+                const prevTurn = prevCannonState.currentPlayer;
+                const turnChanged = prevTurn !== state.currentPlayer;
+                if (turnChanged) {
+                    const shooterId = prevTurn;
+                    const shooterIdx = state.players.findIndex(p => p.id === shooterId);
+                    if (shooterIdx !== -1) {
+                        const angle = prevCannonState.players[shooterIdx].angle || 45;
+                        const power = prevCannonState.players[shooterIdx].power || 50;
+                        launchCannonProjectile(shooterIdx, angle, power, state);
+                    }
+                }
+            }
+            prevCannonState = JSON.parse(JSON.stringify(state));
+
+            state.players?.forEach((p, idx) => {
+                if (p.health !== targetHealths[idx]) {
+                    targetHealths[idx] = p.health;
+                    cannonShakes[idx] = 15;
+                }
+            });
+
+            const currentAngle = myPlayer ? (myPlayer.angle || 45) : 45;
+            const currentPower = myPlayer ? (myPlayer.power || 50) : 50;
+
             document.getElementById('game-main').innerHTML = `
-    <div style="flex:1;padding:20px">
-      <div class="cannon-container" style="height:360px;border-radius:var(--radius2)">
-        <div class="cannon-ground"></div>
-        ${state.players?.map((p, i) => `
-          <div class="cannon-player" style="${i === 0 ? 'left:60px' : 'right:60px'}">
-            <div class="text-xs font-bold" style="color:#fff">${currentRoom.players.find(pl => pl.id === p.id)?.name || 'P' + (i + 1)}</div>
-            <div class="cannon-body" style="background:${i === 0 ? '#2563eb' : '#dc2626'}">
-              <div class="cannon-barrel" style="transform:rotate(-${p.angle || 45}deg);background:${i === 0 ? '#1d4ed8' : '#b91c1c'}"></div>
-            </div>
-            <div style="width:60px;height:8px;background:rgba(0,0,0,.3);border-radius:4px;margin-top:4px">
-              <div style="width:${p.health}%;height:100%;background:${p.health > 50 ? '#22c55e' : p.health > 25 ? '#f59e0b' : '#ef4444'};border-radius:4px;transition:width .3s"></div>
-            </div>
-            <div class="text-xs" style="color:#fff">${p.health}HP</div>
-          </div>
-        `).join('')}
-        <div class="absolute" style="top:12px;left:50%;transform:translateX(-50%);color:#fff;font-size:.85rem;opacity:.8">
-          🌬️ Wind: ${state.wind?.toFixed(1)} m/s
-        </div>
+    <div style="flex:1;padding:20px;display:flex;flex-direction:column;align-items:center">
+      <div class="game-canvas-container" style="max-width:700px;aspect-ratio:16/9;position:relative;width:100%">
+        <canvas id="cannon-canvas" class="game-canvas" width="700" height="390"></canvas>
       </div>
 
       ${isMyTurn ? `
-        <div style="margin-top:16px;background:var(--surface);border-radius:var(--radius2);padding:16px">
+        <div style="margin-top:16px;background:var(--surface);border-radius:var(--radius2);padding:16px;width:100%;max-width:700px">
           <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
             <div>
-              <label class="text-sm" style="color:var(--text2)">Angle: <span id="angle-val">45</span>°</label>
-              <input type="range" min="10" max="80" value="45" class="w-full size-slider mt-1" oninput="document.getElementById('angle-val').textContent=this.value" id="cannon-angle">
+              <label class="text-sm" style="color:var(--text2)">Angle: <span id="angle-val">${currentAngle}</span>°</label>
+              <input type="range" min="10" max="80" value="${currentAngle}" class="w-full size-slider mt-1" oninput="updateCannonAim(this.value, null)" id="cannon-angle">
             </div>
             <div>
-              <label class="text-sm" style="color:var(--text2)">Power: <span id="power-val">50</span></label>
-              <input type="range" min="10" max="100" value="50" class="w-full size-slider mt-1" oninput="document.getElementById('power-val').textContent=this.value" id="cannon-power">
+              <label class="text-sm" style="color:var(--text2)">Power: <span id="power-val">${currentPower}</span></label>
+              <input type="range" min="10" max="100" value="${currentPower}" class="w-full size-slider mt-1" oninput="updateCannonAim(null, this.value)" id="cannon-power">
             </div>
           </div>
           <button class="btn btn-primary w-full mt-3" onclick="fireCannon()">💥 Fire!</button>
@@ -2931,13 +3349,464 @@
       ` : `<div class="text-center mt-4" style="color:var(--text2)">⏳ Waiting for opponent to fire...</div>`}
     </div>
   `;
+
+            setTimeout(initCannonCanvas, 50);
         }
 
         function fireCannon() {
             const angle = parseInt(document.getElementById('cannon-angle')?.value || 45);
             const power = parseInt(document.getElementById('cannon-power')?.value || 50);
+            if (isSoloMode) {
+                handleSoloCannonFire(angle, power);
+                return;
+            }
             socket.emit('cannon_fire', { code: currentRoom.code, angle, power });
             toast('💥 Fired!', 'info');
+        }
+
+        function initCannonCanvas() {
+            cannonCanvas = document.getElementById('cannon-canvas');
+            if (!cannonCanvas) return;
+            cannonCtx = cannonCanvas.getContext('2d');
+            if (!cannonAnimationId) {
+                drawCannonScene();
+            }
+        }
+
+        function drawCannonScene() {
+            if (!cannonCanvas || !cannonCtx) return;
+            const ctx = cannonCtx;
+            const W = cannonCanvas.width;
+            const H = cannonCanvas.height;
+
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, H);
+            skyGrad.addColorStop(0, '#0f172a');
+            skyGrad.addColorStop(1, '#1e1b4b');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = '#ffffff';
+            for (let i = 0; i < 40; i++) {
+                const sx = (Math.sin(i * 123.45) * 0.5 + 0.5) * W;
+                const sy = (Math.cos(i * 543.21) * 0.5 + 0.5) * (H - 100);
+                ctx.fillRect(sx, sy, 1.5, 1.5);
+            }
+
+            const state = currentGame.state;
+            if (state) {
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+                ctx.font = '12px sans-serif';
+                ctx.textAlign = 'center';
+                const windText = `🌬️ Wind: ${state.wind ? state.wind.toFixed(1) : '0.0'} m/s`;
+                ctx.fillText(windText, W / 2, 30);
+            }
+
+            const groundGrad = ctx.createLinearGradient(0, H - 60, 0, H);
+            groundGrad.addColorStop(0, '#15803d');
+            groundGrad.addColorStop(1, '#166534');
+            ctx.fillStyle = groundGrad;
+            ctx.fillRect(0, H - 60, W, 60);
+
+            ctx.strokeStyle = '#22c55e';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < W; i += 12) {
+                ctx.beginPath();
+                ctx.moveTo(i, H - 60);
+                ctx.lineTo(i + 3, H - 66);
+                ctx.stroke();
+            }
+
+            if (state && state.players) {
+                state.players.forEach((p, idx) => {
+                    const isLeft = idx === 0;
+                    const cx = isLeft ? 100 : W - 100;
+                    const cy = H - 60;
+                    const color = isLeft ? '#2563eb' : '#dc2626';
+                    const barrelColor = isLeft ? '#1d4ed8' : '#b91c1c';
+
+                    ctx.fillStyle = color;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy - 10, 20, Math.PI, 0);
+                    ctx.fill();
+
+                    let angle = p.angle || 45;
+                    const rad = angle * Math.PI / 180;
+                    const barrelLen = 30;
+                    const bx = cx;
+                    const by = cy - 20;
+                    const bEndT = isLeft ? bx + barrelLen * Math.cos(rad) : bx - barrelLen * Math.cos(rad);
+                    const bEndB = by - barrelLen * Math.sin(rad);
+
+                    ctx.strokeStyle = barrelColor;
+                    ctx.lineWidth = 6;
+                    ctx.beginPath();
+                    ctx.moveTo(bx, by);
+                    ctx.lineTo(bEndT, bEndB);
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#334155';
+                    ctx.beginPath();
+                    ctx.arc(cx - 12, cy - 5, 6, 0, Math.PI * 2);
+                    ctx.arc(cx + 12, cy - 5, 6, 0, Math.PI * 2);
+                    ctx.fill();
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = 'bold 11px sans-serif';
+                    ctx.textAlign = 'center';
+                    const name = currentRoom.players.find(pl => pl.id === p.id)?.name || `Player ${idx + 1}`;
+                    ctx.fillText(name, cx, cy - 50);
+
+                    let shake = cannonShakes[idx] || 0;
+                    if (shake > 0) cannonShakes[idx]--;
+                    const shakeX = (Math.random() - 0.5) * shake;
+                    const hbarW = 60;
+                    const hbarH = 6;
+                    const hbarX = cx - hbarW / 2 + shakeX;
+                    const hbarY = cy - 42;
+
+                    ctx.fillStyle = '#475569';
+                    ctx.fillRect(hbarX, hbarY, hbarW, hbarH);
+
+                    if (displayHealths[idx] > displayHealths[idx] * 0 + targetHealths[idx]) {
+                        displayHealths[idx] -= 0.5;
+                    } else if (displayHealths[idx] < targetHealths[idx]) {
+                        displayHealths[idx] = targetHealths[idx];
+                    }
+
+                    const healthPct = displayHealths[idx] / 100;
+                    ctx.fillStyle = healthPct > 0.5 ? '#22c55e' : healthPct > 0.25 ? '#f59e0b' : '#ef4444';
+                    ctx.fillRect(hbarX, hbarY, hbarW * healthPct, hbarH);
+
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = '9px sans-serif';
+                    ctx.fillText(`${Math.round(displayHealths[idx])}HP`, cx, cy - 30);
+                });
+            }
+
+            const isMyTurn = state && state.currentPlayer === currentUser?.id;
+            if (isMyTurn && !cannonProjectile) {
+                const myIdx = state.players.findIndex(p => p.id === currentUser.id);
+                const p = state.players[myIdx];
+                const cx = myIdx === 0 ? 100 : W - 100;
+                const cy = H - 60;
+
+                const angle = parseInt(document.getElementById('cannon-angle')?.value || p.angle || 45);
+                const power = parseInt(document.getElementById('cannon-power')?.value || p.power || 50);
+
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([4, 4]);
+
+                ctx.beginPath();
+                let tx = cx;
+                let ty = cy - 20;
+                ctx.moveTo(tx, ty);
+
+                const rad = angle * Math.PI / 180;
+                const velScale = 0.15;
+                let vx = myIdx === 0 ? power * Math.cos(rad) * velScale : -power * Math.cos(rad) * velScale;
+                let vy = -power * Math.sin(rad) * velScale;
+                const g = 0.08;
+                const w = (state.wind || 0) * 0.003;
+
+                for (let step = 0; step < 120; step++) {
+                    vx += w;
+                    vy += g;
+                    tx += vx;
+                    ty += vy;
+                    if (ty >= H - 60) break;
+                    ctx.lineTo(tx, ty);
+                }
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+        }
+
+        function updateCannonAim(angle, power) {
+            const state = currentGame.state;
+            if (!state) return;
+            const myPlayer = state.players.find(p => p.id === currentUser.id);
+            if (!myPlayer) return;
+
+            if (angle !== null) {
+                myPlayer.angle = parseInt(angle);
+                document.getElementById('angle-val').textContent = angle;
+            }
+            if (power !== null) {
+                myPlayer.power = parseInt(power);
+                document.getElementById('power-val').textContent = power;
+            }
+            drawCannonScene();
+        }
+
+        function launchCannonProjectile(shooterIdx, angle, power, newState) {
+            if (!cannonCanvas) return;
+            const W = cannonCanvas.width;
+            const H = cannonCanvas.height;
+
+            const cx = shooterIdx === 0 ? 100 : W - 100;
+            const cy = H - 60;
+
+            const rad = angle * Math.PI / 180;
+            const velScale = 0.15;
+            let vx = shooterIdx === 0 ? power * Math.cos(rad) * velScale : -power * Math.cos(rad) * velScale;
+            let vy = -power * Math.sin(rad) * velScale;
+
+            const emojis = ['🚀', '💣', '⚡', '🔥', '☄️'];
+            const emoji = emojis[Math.floor(Math.random() * emojis.length)];
+
+            cannonProjectile = {
+                x: cx,
+                y: cy - 20,
+                vx: vx,
+                vy: vy,
+                emoji: emoji,
+                trail: []
+            };
+
+            cannonParticles = [];
+            if (cannonAnimationId) cancelAnimationFrame(cannonAnimationId);
+
+            function update() {
+                if (!cannonProjectile || !currentGame) return;
+                const state = currentGame.state;
+                const g = 0.08;
+                const w = (state.wind || 0) * 0.003;
+
+                cannonProjectile.vx += w;
+                cannonProjectile.vy += g;
+                cannonProjectile.x += cannonProjectile.vx;
+                cannonProjectile.y += cannonProjectile.vy;
+
+                cannonProjectile.trail.push({ x: cannonProjectile.x, y: cannonProjectile.y });
+                if (cannonProjectile.trail.length > 15) cannonProjectile.trail.shift();
+
+                const targetIdx = 1 - shooterIdx;
+                const targetX = targetIdx === 0 ? 100 : W - 100;
+
+                const dx = cannonProjectile.x - targetX;
+                const dy = cannonProjectile.y - (H - 70);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+
+                let hit = false;
+                if (distance < 25) {
+                    hit = true;
+                    spawnExplosion(cannonProjectile.x, cannonProjectile.y);
+                } else if (cannonProjectile.y >= H - 60) {
+                    hit = true;
+                    spawnExplosion(cannonProjectile.x, H - 60);
+                }
+
+                if (hit) {
+                    cannonProjectile = null;
+                    currentGame.state = newState;
+                    animateExplosionOnly();
+                    return;
+                }
+
+                drawCannonScene();
+                drawProjectile();
+                drawParticles();
+                cannonAnimationId = requestAnimationFrame(update);
+            }
+            cannonAnimationId = requestAnimationFrame(update);
+        }
+
+        function drawProjectile() {
+            if (!cannonCtx || !cannonProjectile) return;
+            const ctx = cannonCtx;
+
+            ctx.strokeStyle = 'rgba(226, 232, 240, 0.2)';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            cannonProjectile.trail.forEach((pt, i) => {
+                if (i === 0) ctx.moveTo(pt.x, pt.y);
+                else ctx.lineTo(pt.x, pt.y);
+            });
+            ctx.stroke();
+
+            ctx.font = '20px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(cannonProjectile.emoji, cannonProjectile.x, cannonProjectile.y);
+        }
+
+        function spawnExplosion(x, y) {
+            for (let i = 0; i < 25; i++) {
+                const angle = Math.random() * Math.PI * 2;
+                const speed = Math.random() * 3 + 1;
+                cannonParticles.push({
+                    x: x,
+                    y: y,
+                    vx: Math.cos(angle) * speed,
+                    vy: Math.sin(angle) * speed,
+                    size: Math.random() * 4 + 2,
+                    color: ['#f59e0b', '#ef4444', '#ca8a04', '#ff7849'][Math.floor(Math.random() * 4)],
+                    alpha: 1,
+                    life: Math.random() * 30 + 20
+                });
+            }
+        }
+
+        function drawParticles() {
+            if (!cannonCtx) return;
+            const ctx = cannonCtx;
+            cannonParticles.forEach(p => {
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vy += 0.05;
+                p.alpha = Math.max(0, p.alpha - 0.02);
+                p.life--;
+
+                ctx.fillStyle = p.color;
+                ctx.globalAlpha = p.alpha;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+            cannonParticles = cannonParticles.filter(p => p.life > 0 && p.alpha > 0);
+        }
+
+        function animateExplosionOnly() {
+            if (cannonParticles.length === 0) {
+                cancelAnimationFrame(cannonAnimationId);
+                cannonAnimationId = null;
+                drawCannonScene();
+                checkCannonGameOver();
+                return;
+            }
+            drawCannonScene();
+            drawParticles();
+            cannonAnimationId = requestAnimationFrame(animateExplosionOnly);
+        }
+
+        function checkCannonGameOver() {
+            const state = currentGame.state;
+            if (!state || !state.players) return;
+            const p1 = state.players[0];
+            const p2 = state.players[1];
+            if (p1.health <= 0 || p2.health <= 0) {
+                const winnerId = p1.health > 0 ? p1.id : p2.id;
+                if (isSoloMode) {
+                    endSoloGame(winnerId);
+                }
+            }
+        }
+
+        function handleSoloCannonFire(angle, power) {
+            const state = currentGame.state;
+            const myPlayer = state.players[0];
+            const botPlayer = state.players[1];
+
+            myPlayer.angle = angle;
+            myPlayer.power = power;
+
+            const wind = state.wind;
+            const targetX = 600;
+            const startX = 100;
+
+            const rad = angle * Math.PI / 180;
+            const velScale = 0.15;
+            let vx = power * Math.cos(rad) * velScale;
+            let vy = -power * Math.sin(rad) * velScale;
+
+            let tx = startX;
+            let ty = 390 - 80;
+            const g = 0.08;
+            const w = wind * 0.003;
+
+            let hit = false;
+            for (let step = 0; step < 200; step++) {
+                vx += w;
+                vy += g;
+                tx += vx;
+                ty += vy;
+                const dx = tx - targetX;
+                const dy = ty - (390 - 70);
+                if (Math.sqrt(dx * dx + dy * dy) < 25) {
+                    hit = true;
+                    break;
+                }
+                if (ty >= 390 - 60) break;
+            }
+
+            const nextState = JSON.parse(JSON.stringify(state));
+            if (hit) {
+                nextState.players[1].health = Math.max(0, botPlayer.health - 25);
+            }
+            nextState.currentPlayer = 'bot-1';
+            nextState.wind = (Math.random() * 10 - 5);
+
+            launchCannonProjectile(0, angle, power, nextState);
+
+            setTimeout(() => {
+                if (isSoloMode && nextState.players[1].health > 0) {
+                    triggerSoloBotCannonFire();
+                }
+            }, 4000);
+        }
+
+        function triggerSoloBotCannonFire() {
+            if (!isSoloMode || currentGame.type !== 'cannon') return;
+            const state = currentGame.state;
+            if (state.currentPlayer !== 'bot-1') return;
+
+            let targetAngle = 45;
+            let targetPower = 60;
+
+            const w = state.wind;
+            targetPower += w * 1.5;
+
+            let offset = 0;
+            if (botDifficulty === 'normal') {
+                offset = (Math.random() * 16 - 8);
+            } else if (botDifficulty === 'medium') {
+                offset = (Math.random() * 8 - 4);
+            } else {
+                offset = (Math.random() * 2 - 1);
+            }
+
+            targetPower += offset;
+            targetPower = Math.max(10, Math.min(100, targetPower));
+            targetAngle = Math.max(10, Math.min(80, targetAngle + offset / 2));
+
+            const startX = 600;
+            const targetX = 100;
+
+            const rad = targetAngle * Math.PI / 180;
+            const velScale = 0.15;
+            let vx = -targetPower * Math.cos(rad) * velScale;
+            let vy = -targetPower * Math.sin(rad) * velScale;
+
+            let tx = startX;
+            let ty = 390 - 80;
+            const g = 0.08;
+            const w_acc = w * 0.003;
+
+            let hit = false;
+            for (let step = 0; step < 200; step++) {
+                vx += w_acc;
+                vy += g;
+                tx += vx;
+                ty += vy;
+                const dx = tx - targetX;
+                const dy = ty - (390 - 70);
+                if (Math.sqrt(dx * dx + dy * dy) < 25) {
+                    hit = true;
+                    break;
+                }
+                if (ty >= 390 - 60) break;
+            }
+
+            const nextState = JSON.parse(JSON.stringify(state));
+            if (hit) {
+                nextState.players[0].health = Math.max(0, state.players[0].health - 25);
+            }
+            nextState.currentPlayer = currentUser.id;
+            nextState.wind = (Math.random() * 10 - 5);
+
+            launchCannonProjectile(1, targetAngle, targetPower, nextState);
         }
 
         // ── DRAWING ──────────────────────────────────
@@ -3019,20 +3888,27 @@
         }
 
         // ── SCORES ───────────────────────────────────
+        let lastRenderedScores = {};
         function renderScores(scores, hands, players) {
             const el = document.getElementById('game-scores');
             if (!el) return;
             if (scores) {
                 el.innerHTML = Object.entries(scores).sort((a, b) => b[1] - a[1]).map(([pid, score]) => {
                     const p = currentRoom?.players.find(p => p.id === pid);
-                    return `<div class="score-item"><span>${p?.avatar || '🎮'} ${p?.name || 'Player'}</span><span class="score-num">${score}</span></div>`;
+                    const prevScore = lastRenderedScores[pid];
+                    const didChange = prevScore !== undefined && prevScore !== score;
+                    lastRenderedScores[pid] = score;
+                    return `<div class="score-item"><span>${p?.avatar || '🎮'} ${p?.name || 'Player'}</span><span class="score-num ${didChange ? 'score-pop-active' : ''}">${score}</span></div>`;
                 }).join('');
             } else if (hands && players) {
                 // UNO - show card counts
                 el.innerHTML = players.map(pid => {
                     const p = currentRoom?.players.find(p => p.id === pid);
                     const cnt = hands[pid]?.length || 0;
-                    return `<div class="score-item"><span>${p?.avatar || '🎮'} ${p?.name}</span><span class="score-num">${cnt} 🃏</span></div>`;
+                    const prevScore = lastRenderedScores[pid];
+                    const didChange = prevScore !== undefined && prevScore !== cnt;
+                    lastRenderedScores[pid] = cnt;
+                    return `<div class="score-item"><span>${p?.avatar || '🎮'} ${p?.name}</span><span class="score-num ${didChange ? 'score-pop-active' : ''}">${cnt} 🃏</span></div>`;
                 }).join('');
             }
         }
@@ -3088,9 +3964,30 @@
             document.getElementById('profile-avatar').textContent = currentUser.avatar || '🎮';
             document.getElementById('profile-name').textContent = currentUser.username;
             document.getElementById('profile-joined').textContent = `Member since ${new Date(currentUser.created_at || Date.now()).toLocaleDateString()}`;
-            document.getElementById('profile-wins').textContent = currentUser.wins || 0;
-            document.getElementById('profile-losses').textContent = currentUser.losses || 0;
-            document.getElementById('profile-xp').textContent = currentUser.xp || 0;
+            
+            const wins = currentUser.wins || 0;
+            const losses = currentUser.losses || 0;
+            const xp = currentUser.xp || 0;
+            const level = Math.floor(xp / 100) + 1;
+            const levelXp = xp % 100;
+            const totalGames = wins + losses;
+            const winRate = totalGames > 0 ? Math.round((wins / totalGames) * 100) : 0;
+
+            document.getElementById('profile-wins').textContent = wins;
+            document.getElementById('profile-losses').textContent = losses;
+            document.getElementById('profile-xp').textContent = xp;
+            
+            const winRateEl = document.getElementById('profile-winrate');
+            if (winRateEl) winRateEl.textContent = `${winRate}%`;
+
+            const levelLabel = document.getElementById('profile-level-label');
+            if (levelLabel) levelLabel.textContent = `Level ${level}`;
+
+            const xpLabel = document.getElementById('profile-xp-label');
+            if (xpLabel) xpLabel.textContent = `${levelXp} / 100 XP`;
+
+            const xpProgress = document.getElementById('profile-xp-progress');
+            if (xpProgress) xpProgress.style.width = `${levelXp}%`;
         }
 
         // ── NOTIFICATIONS ────────────────────────────
@@ -3157,6 +4054,1837 @@
             el.innerHTML = `<span>${type === 'success' ? '✅' : type === 'error' ? '❌' : 'ℹ️'}</span>${msg}`;
             container.appendChild(el);
             setTimeout(() => el.remove(), 4000);
+        }
+
+        // ── SOLO BOT MECHANICS ────────────────────────
+        function cleanupSoloGame() {
+            isSoloMode = false;
+            if (soloInterval) { clearInterval(soloInterval); clearTimeout(soloInterval); soloInterval = null; }
+            if (cannonAnimationId) { cancelAnimationFrame(cannonAnimationId); cannonAnimationId = null; }
+            if (flappyAnimationId) { cancelAnimationFrame(flappyAnimationId); flappyAnimationId = null; }
+            if (footballAnimationId) { cancelAnimationFrame(footballAnimationId); footballAnimationId = null; }
+            if (carAnimationId) { cancelAnimationFrame(carAnimationId); carAnimationId = null; }
+            if (csAnimationId) { cancelAnimationFrame(csAnimationId); csAnimationId = null; }
+            if (mgAnimationId) { cancelAnimationFrame(mgAnimationId); mgAnimationId = null; }
+            if (triviaTimer) { clearInterval(triviaTimer); triviaTimer = null; }
+
+            window.removeEventListener('keydown', handleFlappyKey);
+            window.removeEventListener('keydown', handleCSKey);
+            window.removeEventListener('keydown', handleCarKeyDown);
+            window.removeEventListener('keyup', handleCarKeyUp);
+
+            cannonProjectile = null;
+            flappyState = null;
+            footballState = null;
+            carState = null;
+            csState = null;
+            mgState = null;
+        }
+
+        function handleSoloUnoPlay(idx, chosenColor) {
+            const state = currentGame.state;
+            const hand = state.hands[currentUser.id];
+            const card = hand[idx];
+            const top = state.discard[state.discard.length - 1];
+            const topColor = top.chosenColor || top.color;
+
+            if (card.color !== 'wild' && card.color !== 'wild4' && card.color !== topColor && card.value !== top.value) {
+                toast('Invalid card choice!', 'error');
+                return;
+            }
+
+            if ((card.color === 'wild' || card.color === 'wild4') && !chosenColor) {
+                pendingUnoCard = idx;
+                openModal('color-picker-modal');
+                return;
+            }
+
+            hand.splice(idx, 1);
+            if (chosenColor) card.chosenColor = chosenColor;
+            state.discard.push(card);
+
+            if (hand.length === 0) {
+                endSoloGame(currentUser.id);
+                return;
+            }
+
+            let nextPlayer = 'bot-1';
+            if (card.value === 'skip') {
+                nextPlayer = currentUser.id;
+                toast('🚫 Bot skipped!', 'success');
+            } else if (card.value === 'reverse') {
+                nextPlayer = currentUser.id;
+                toast('↩️ Bot reversed!', 'success');
+            } else if (card.value === 'draw2') {
+                const cards = Array(2).fill(0).map(() => state.deck.pop());
+                state.hands['bot-1'].push(...cards);
+                toast('➕2 Bot draws 2!', 'success');
+            } else if (card.value === 'wild4') {
+                const cards = Array(4).fill(0).map(() => state.deck.pop());
+                state.hands['bot-1'].push(...cards);
+                toast('🌈 Bot draws 4!', 'success');
+            }
+
+            state.currentPlayer = nextPlayer;
+            renderUno(state);
+            checkSoloBotTurn();
+        }
+
+        function handleSoloUnoDraw() {
+            const state = currentGame.state;
+            const hand = state.hands[currentUser.id];
+            const top = state.discard[state.discard.length - 1];
+            const topColor = top.chosenColor || top.color;
+
+            if (state.deck.length === 0) {
+                const topCard = state.discard.pop();
+                state.deck = state.discard;
+                state.discard = [topCard];
+                state.deck.sort(() => Math.random() - 0.5);
+            }
+
+            const drawn = state.deck.pop();
+            hand.push(drawn);
+            toast('Drew a card', 'info');
+
+            if (drawn.color === 'wild' || drawn.color === 'wild4' || drawn.color === topColor || drawn.value === top.value) {
+                // keep turn to let them choose to play it
+            } else {
+                state.currentPlayer = 'bot-1';
+            }
+
+            renderUno(state);
+            checkSoloBotTurn();
+        }
+
+        function runSoloBotTurn() {
+            const state = currentGame.state;
+            const hand = state.hands['bot-1'];
+            const top = state.discard[state.discard.length - 1];
+            const topColor = top.chosenColor || top.color;
+
+            const validIndices = [];
+            for (let i = 0; i < hand.length; i++) {
+                const c = hand[i];
+                if (c.color === 'wild' || c.color === 'wild4' || c.color === topColor || c.value === top.value) {
+                    validIndices.push(i);
+                }
+            }
+
+            if (validIndices.length > 0) {
+                let idx = validIndices[Math.floor(Math.random() * validIndices.length)];
+                const playedCard = hand.splice(idx, 1)[0];
+                state.discard.push(playedCard);
+
+                if (playedCard.color === 'wild' || playedCard.color === 'wild4') {
+                    const colors = ['red', 'blue', 'green', 'yellow'];
+                    const counts = colors.map(col => hand.filter(c => c.color === col).length);
+                    playedCard.chosenColor = colors[counts.indexOf(Math.max(...counts))];
+                }
+
+                if (hand.length === 1) addChatMsg('Bot 🤖', 'UNO! 🃏');
+                if (hand.length === 0) { endSoloGame('bot-1'); return; }
+
+                let nextPlayer = currentUser.id;
+                if (playedCard.value === 'skip') {
+                    nextPlayer = 'bot-1';
+                    addChatMsg('Bot 🤖', '🚫 Skipped your turn!');
+                } else if (playedCard.value === 'reverse') {
+                    nextPlayer = 'bot-1';
+                    addChatMsg('Bot 🤖', '↩️ Reversed!');
+                } else if (playedCard.value === 'draw2') {
+                    const cards = Array(2).fill(0).map(() => state.deck.pop());
+                    state.hands[currentUser.id].push(...cards);
+                    addChatMsg('Bot 🤖', '➕2 Draw 2 for you!');
+                } else if (playedCard.value === 'wild4') {
+                    const cards = Array(4).fill(0).map(() => state.deck.pop());
+                    state.hands[currentUser.id].push(...cards);
+                    addChatMsg('Bot 🤖', '🌈 +4 Wild Draw 4 for you!');
+                }
+
+                state.currentPlayer = nextPlayer;
+                renderUno(state);
+                checkSoloBotTurn();
+            } else {
+                if (state.deck.length === 0) {
+                    const topCard = state.discard.pop();
+                    state.deck = state.discard;
+                    state.discard = [topCard];
+                    state.deck.sort(() => Math.random() - 0.5);
+                }
+                const drawn = state.deck.pop();
+                hand.push(drawn);
+                addChatMsg('Bot 🤖', '🂠 Drew a card.');
+
+                if (drawn.color === 'wild' || drawn.color === 'wild4' || drawn.color === topColor || drawn.value === top.value) {
+                    hand.pop();
+                    state.discard.push(drawn);
+                    if (drawn.color === 'wild' || drawn.color === 'wild4') {
+                        drawn.chosenColor = ['red', 'blue', 'green', 'yellow'][Math.floor(Math.random() * 4)];
+                    }
+                    state.currentPlayer = currentUser.id;
+                } else {
+                    state.currentPlayer = currentUser.id;
+                }
+                renderUno(state);
+                checkSoloBotTurn();
+            }
+        }
+
+        function handleSoloMemoryFlip(id) {
+            const state = currentGame.state;
+            const card = state.cards.find(c => c.id === id);
+            if (!card || card.flipped || card.matched) return;
+
+            card.flipped = true;
+            state.flipped.push(card);
+            state.botMemory[card.id] = card.emoji;
+            renderMemory(state);
+
+            if (state.flipped.length === 2) {
+                const [c1, c2] = state.flipped;
+                state.flipped = [];
+
+                if (c1.emoji === c2.emoji) {
+                    c1.matched = true;
+                    c2.matched = true;
+                    state.scores[currentUser.id] += 10;
+                    toast('Match! 🎉', 'success');
+
+                    const allMatched = state.cards.every(c => c.matched);
+                    if (allMatched) {
+                        endSoloGame(state.scores[currentUser.id] > state.scores['bot-1'] ? currentUser.id : 'bot-1');
+                    } else {
+                        renderMemory(state);
+                    }
+                } else {
+                    setTimeout(() => {
+                        c1.flipped = false;
+                        c2.flipped = false;
+                        state.currentPlayer = 'bot-1';
+                        renderMemory(state);
+                        checkSoloBotTurn();
+                    }, 1000);
+                }
+            }
+        }
+
+        function runSoloMemoryBotTurn() {
+            const state = currentGame.state;
+            const unflipped = state.cards.filter(c => !c.flipped && !c.matched);
+            if (unflipped.length < 2) return;
+
+            let firstCard = null;
+            let secondCard = null;
+
+            let knownPair = null;
+            const seen = state.botMemory;
+            const seenIds = Object.keys(seen).map(Number);
+            for (let i = 0; i < seenIds.length; i++) {
+                for (let j = i + 1; j < seenIds.length; j++) {
+                    const id1 = seenIds[i];
+                    const id2 = seenIds[j];
+                    const c1 = state.cards[id1];
+                    const c2 = state.cards[id2];
+                    if (c1.emoji === c2.emoji && !c1.matched && !c2.matched) {
+                        const recallChance = botDifficulty === 'hard' ? 1.0 : botDifficulty === 'medium' ? 0.6 : 0.25;
+                        if (Math.random() < recallChance) {
+                            knownPair = [c1, c2];
+                            break;
+                        }
+                    }
+                }
+                if (knownPair) break;
+            }
+
+            if (knownPair) {
+                firstCard = knownPair[0];
+                secondCard = knownPair[1];
+            } else {
+                firstCard = unflipped[Math.floor(Math.random() * unflipped.length)];
+                seen[firstCard.id] = firstCard.emoji;
+
+                let matchingCard = null;
+                for (let id of Object.keys(seen)) {
+                    if (Number(id) !== firstCard.id && seen[id] === firstCard.emoji && !state.cards[id].matched) {
+                        matchingCard = state.cards[id];
+                        break;
+                    }
+                }
+
+                if (matchingCard) {
+                    const recallChance = botDifficulty === 'hard' ? 1.0 : botDifficulty === 'medium' ? 0.6 : 0.25;
+                    if (Math.random() < recallChance) secondCard = matchingCard;
+                }
+
+                if (!secondCard) {
+                    const remaining = unflipped.filter(c => c.id !== firstCard.id);
+                    secondCard = remaining[Math.floor(Math.random() * remaining.length)];
+                }
+            }
+
+            firstCard.flipped = true;
+            renderMemory(state);
+
+            setTimeout(() => {
+                secondCard.flipped = true;
+                seen[secondCard.id] = secondCard.emoji;
+                renderMemory(state);
+
+                setTimeout(() => {
+                    if (firstCard.emoji === secondCard.emoji) {
+                        firstCard.matched = true;
+                        secondCard.matched = true;
+                        state.scores['bot-1'] += 10;
+                        addChatMsg('Bot 🤖', `Matched ${firstCard.emoji}! 🎉`);
+
+                        const allMatched = state.cards.every(c => c.matched);
+                        if (allMatched) {
+                            endSoloGame(state.scores[currentUser.id] > state.scores['bot-1'] ? currentUser.id : 'bot-1');
+                        } else {
+                            runSoloMemoryBotTurn();
+                        }
+                    } else {
+                        firstCard.flipped = false;
+                        secondCard.flipped = false;
+                        state.currentPlayer = currentUser.id;
+                        renderMemory(state);
+                    }
+                }, 1200);
+            }, 800);
+        }
+
+        function checkSoloBotTurn() {
+            if (!isSoloMode || !currentGame) return;
+            const state = currentGame.state;
+            if (state.currentPlayer === 'bot-1') {
+                setTimeout(() => {
+                    if (!isSoloMode || !currentGame || currentGame.state.currentPlayer !== 'bot-1') return;
+                    if (currentGame.type === 'uno') runSoloBotTurn();
+                    else if (currentGame.type === 'memory') runSoloMemoryBotTurn();
+                }, botDifficulty === 'hard' ? 1000 : botDifficulty === 'medium' ? 2000 : 3000);
+            }
+        }
+
+        function endSoloGame(winnerId) {
+            cleanupSoloGame();
+            const screen = document.getElementById('game-over-screen');
+            const title = document.getElementById('game-over-title');
+            const winner = document.getElementById('game-over-winner');
+            const scoresDiv = document.getElementById('game-over-scores');
+
+            title.textContent = "Game Over!";
+            const isMe = winnerId === currentUser.id;
+            winner.textContent = isMe ? "🥇 You won! Congratulations!" : "🤖 Bot won this time!";
+
+            const state = currentGame.state;
+            scoresDiv.innerHTML = `
+                <div style="color:var(--text2);margin:4px 0">${currentUser.username}: <b style="color:var(--lime)">${state.scores ? state.scores[currentUser.id] || 0 : state.score || 0} pts</b></div>
+                <div style="color:var(--text2);margin:4px 0">Bot 🤖: <b style="color:var(--lime)">${state.scores ? state.scores['bot-1'] || 0 : ''} pts</b></div>
+            `;
+            screen.classList.remove('hidden');
+        }
+
+        function handleSoloTriviaAnswer(playerId, answerIdx) {
+            const state = currentGame.state;
+            const q = state.currentQuestion;
+
+            if (playerId === currentUser.id) {
+                if (answerIdx === q.answer) {
+                    state.scores[currentUser.id] += 10;
+                    toast('Correct answer! +10 pts', 'success');
+                } else {
+                    toast('Wrong answer!', 'error');
+                }
+
+                if (state.answers['bot-1'] === undefined) {
+                    const botCorrect = Math.random() < (botDifficulty === 'hard' ? 0.9 : botDifficulty === 'medium' ? 0.7 : 0.5);
+                    const botAns = botCorrect ? q.answer : (q.answer + 1) % 4;
+                    state.answers['bot-1'] = botAns;
+                    if (botCorrect) state.scores['bot-1'] += 10;
+                }
+
+                state.answers[currentUser.id] = answerIdx;
+                nextTriviaRound();
+            } else if (playerId === 'bot-1') {
+                state.answers['bot-1'] = answerIdx;
+                if (answerIdx === q.answer) {
+                    state.scores['bot-1'] += 10;
+                    addChatMsg('Bot 🤖', 'Answered trivia question.');
+                }
+                if (state.answers[currentUser.id] !== undefined) {
+                    nextTriviaRound();
+                }
+            }
+        }
+
+        function nextTriviaRound() {
+            const state = currentGame.state;
+            setTimeout(() => {
+                state.round++;
+                if (state.round >= state.questions.length) {
+                    endSoloGame(state.scores[currentUser.id] > state.scores['bot-1'] ? currentUser.id : 'bot-1');
+                } else {
+                    state.currentQuestion = state.questions[state.round];
+                    state.current = state.round;
+                    state.answers = {};
+                    renderTrivia(state);
+                    triggerTriviaBot();
+                }
+            }, 2000);
+        }
+
+        function triggerTriviaBot() {
+            if (!isSoloMode || currentGame.type !== 'trivia') return;
+            const state = currentGame.state;
+            const delay = botDifficulty === 'hard' ? 3000 : botDifficulty === 'medium' ? 8000 : 15000;
+
+            if (soloInterval) clearTimeout(soloInterval);
+            soloInterval = setTimeout(() => {
+                if (!isSoloMode || currentGame.type !== 'trivia' || state.answers['bot-1'] !== undefined) return;
+                const q = state.currentQuestion;
+                const correct = Math.random() < (botDifficulty === 'hard' ? 0.9 : botDifficulty === 'medium' ? 0.7 : 0.5);
+                const botAns = correct ? q.answer : (q.answer + 1) % 4;
+                handleSoloTriviaAnswer('bot-1', botAns);
+            }, delay);
+        }
+
+        function handleSoloRiddleGuess(guess) {
+            const state = currentGame.state;
+            const r = state.riddles[state.current];
+            const isCorrect = guess.toLowerCase() === r.a.toLowerCase();
+
+            if (isCorrect) {
+                state.scores[currentUser.id] += 10;
+                toast('Correct! +10 pts', 'success');
+                nextRiddleRound();
+            } else {
+                toast('Wrong answer! Try again.', 'error');
+            }
+        }
+
+        function nextRiddleRound() {
+            const state = currentGame.state;
+            state.current++;
+            if (state.current >= state.riddles.length) {
+                endSoloGame(state.scores[currentUser.id] > state.scores['bot-1'] ? currentUser.id : 'bot-1');
+            } else {
+                renderRiddle(state);
+                triggerRiddleBot();
+            }
+        }
+
+        function triggerRiddleBot() {
+            if (!isSoloMode || currentGame.type !== 'riddle') return;
+            const state = currentGame.state;
+            const delay = botDifficulty === 'hard' ? 4000 : botDifficulty === 'medium' ? 9000 : 18000;
+
+            if (soloInterval) clearTimeout(soloInterval);
+            soloInterval = setTimeout(() => {
+                if (!isSoloMode || currentGame.type !== 'riddle') return;
+                const r = state.riddles[state.current];
+                const correct = Math.random() < (botDifficulty === 'hard' ? 0.9 : botDifficulty === 'medium' ? 0.6 : 0.3);
+                if (correct) {
+                    state.scores['bot-1'] += 10;
+                    addChatMsg('Bot 🤖', `Solved the riddle: "${r.a}"`);
+                    toast(`Bot 🤖 solved the riddle: "${r.a}"`, 'info');
+                    nextRiddleRound();
+                } else {
+                    triggerRiddleBot();
+                }
+            }, delay);
+        }
+
+        function handleSoloJumbleGuess(guess) {
+            const state = currentGame.state;
+            const w = state.words[state.current];
+            const isCorrect = guess.toUpperCase() === w.answer.toUpperCase();
+
+            if (isCorrect) {
+                state.scores[currentUser.id] += 10;
+                toast('Correct! +10 pts', 'success');
+                nextJumbleRound();
+            } else {
+                toast('Wrong guess! Try again.', 'error');
+            }
+        }
+
+        function nextJumbleRound() {
+            const state = currentGame.state;
+            state.current++;
+            if (state.current >= state.words.length) {
+                endSoloGame(state.scores[currentUser.id] > state.scores['bot-1'] ? currentUser.id : 'bot-1');
+            } else {
+                state.jumbled = state.words[state.current].jumbled;
+                renderJumble(state);
+                triggerJumbleBot();
+            }
+        }
+
+        function triggerJumbleBot() {
+            if (!isSoloMode || currentGame.type !== 'jumble') return;
+            const state = currentGame.state;
+            const delay = botDifficulty === 'hard' ? 3000 : botDifficulty === 'medium' ? 8000 : 16000;
+
+            if (soloInterval) clearTimeout(soloInterval);
+            soloInterval = setTimeout(() => {
+                if (!isSoloMode || currentGame.type !== 'jumble') return;
+                const w = state.words[state.current];
+                const correct = Math.random() < (botDifficulty === 'hard' ? 0.95 : botDifficulty === 'medium' ? 0.65 : 0.35);
+                if (correct) {
+                    state.scores['bot-1'] += 10;
+                    addChatMsg('Bot 🤖', `Unscrambled: ${w.answer}!`);
+                    toast(`Bot 🤖 unscrambled: "${w.answer}"`, 'info');
+                    nextJumbleRound();
+                } else {
+                    triggerJumbleBot();
+                }
+            }, delay);
+        }
+
+        function handleSoloMathAnswer(ans) {
+            const state = currentGame.state;
+            const q = state.questions[state.current];
+            const isCorrect = parseInt(ans) === parseInt(q.a);
+
+            if (isCorrect) {
+                state.scores[currentUser.id] += 10;
+                toast('Correct! +10 pts', 'success');
+                nextMathRound();
+            } else {
+                toast('Incorrect! Try again.', 'error');
+            }
+        }
+
+        function nextMathRound() {
+            const state = currentGame.state;
+            state.current++;
+            if (state.current >= state.questions.length) {
+                endSoloGame(state.scores[currentUser.id] > state.scores['bot-1'] ? currentUser.id : 'bot-1');
+            } else {
+                renderMathQuiz(state);
+                triggerMathBot();
+            }
+        }
+
+        function triggerMathBot() {
+            if (!isSoloMode || currentGame.type !== 'mathquiz') return;
+            const state = currentGame.state;
+            const delay = botDifficulty === 'hard' ? 2000 : botDifficulty === 'medium' ? 6000 : 12000;
+
+            if (soloInterval) clearTimeout(soloInterval);
+            soloInterval = setTimeout(() => {
+                if (!isSoloMode || currentGame.type !== 'mathquiz') return;
+                const q = state.questions[state.current];
+                const correct = Math.random() < (botDifficulty === 'hard' ? 0.95 : botDifficulty === 'medium' ? 0.7 : 0.4);
+                if (correct) {
+                    state.scores['bot-1'] += 10;
+                    addChatMsg('Bot 🤖', `Answered: ${q.a}!`);
+                    toast(`Bot 🤖 solved the math: "${q.a}"`, 'info');
+                    nextMathRound();
+                } else {
+                    triggerMathBot();
+                }
+            }, delay);
+        }
+
+        function handleSoloTruthDareChoose(choice) {
+            const state = currentGame.state;
+            state.mode = choice;
+            const list = choice === 'truth' ? state.truthList : state.dareList;
+            state.content = list[Math.floor(Math.random() * list.length)];
+            renderTruthDare(state);
+
+            if (state.players[state.currentIdx] === 'bot-1') {
+                setTimeout(() => {
+                    if (isSoloMode && currentGame && currentGame.type === 'truth_dare') {
+                        addChatMsg('Bot 🤖', `Completed challenge: "${state.content}"`);
+                        handleSoloTruthDareNext();
+                    }
+                }, 3000);
+            }
+        }
+
+        function handleSoloTruthDareNext() {
+            const state = currentGame.state;
+            state.content = null;
+            state.currentIdx = (state.currentIdx + 1) % 2;
+            state.currentPlayer = state.players[state.currentIdx];
+            if (state.currentIdx === 0) state.round++;
+            renderTruthDare(state);
+
+            if (state.currentPlayer === 'bot-1') {
+                setTimeout(() => {
+                    if (isSoloMode && currentGame && currentGame.type === 'truth_dare') {
+                        const botChoice = Math.random() < 0.5 ? 'truth' : 'dare';
+                        toast(`Bot chooses ${botChoice.toUpperCase()}!`, 'info');
+                        handleSoloTruthDareChoose(botChoice);
+                    }
+                }, 2000);
+            }
+        }
+
+        function chooseTruthDare(choice) {
+            if (isSoloMode) {
+                handleSoloTruthDareChoose(choice);
+                return;
+            }
+            socket.emit('truth_or_dare_choose', { code: currentRoom.code, choice });
+        }
+
+        function nextTruthDareTurn() {
+            if (isSoloMode) {
+                handleSoloTruthDareNext();
+                return;
+            }
+            socket.emit('truth_dare_next', { code: currentRoom.code });
+        }
+
+        function handleSoloDrawGuess(msg) {
+            const state = currentGame.state;
+            if (state.drawerId === currentUser.id) {
+                addChatMsg(currentUser.username, msg);
+                return;
+            }
+
+            addChatMsg(currentUser.username, msg);
+            if (msg.toUpperCase() === state.word.toUpperCase()) {
+                toast('Correct Guess! 🎉 +10 pts', 'success');
+                state.scores[currentUser.id] += 10;
+                endSoloGame(currentUser.id);
+            }
+        }
+
+        function triggerDrawingBotGuess() {
+            if (!isSoloMode || currentGame.type !== 'drawing') return;
+            const state = currentGame.state;
+            if (state.drawerId !== currentUser.id) return;
+
+            const delay = botDifficulty === 'hard' ? 4000 : botDifficulty === 'medium' ? 8000 : 15000;
+            if (soloInterval) clearTimeout(soloInterval);
+
+            soloInterval = setTimeout(() => {
+                if (!isSoloMode || currentGame.type !== 'drawing') return;
+                const correct = Math.random() < 0.35;
+                if (correct) {
+                    addChatMsg('Bot 🤖', `Is it ${state.word}?`);
+                    toast('Bot guessed the word! 🤖', 'info');
+                    state.scores['bot-1'] += 10;
+                    endSoloGame('bot-1');
+                } else {
+                    const wrongGuesses = ['dog', 'car', 'tree', 'sun', 'house', 'fish', 'flower'];
+                    const guess = wrongGuesses[Math.floor(Math.random() * wrongGuesses.length)];
+                    addChatMsg('Bot 🤖', `Is it ${guess}?`);
+                    triggerDrawingBotGuess();
+                }
+            }, delay);
+        }
+
+        function runSoloDrawingBot() {
+            if (!isSoloMode || currentGame.type !== 'drawing') return;
+            const state = currentGame.state;
+            if (state.drawerId === currentUser.id) return;
+
+            const canvas = document.getElementById('draw-canvas');
+            const ctx = canvas?.getContext('2d');
+            if (!ctx) return;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.strokeStyle = '#7c3aed';
+            ctx.lineWidth = 4;
+
+            const lines = [
+                {x1: 100, y1: 300, x2: 300, y2: 300},
+                {x1: 100, y1: 300, x2: 100, y2: 150},
+                {x1: 300, y1: 300, x2: 300, y2: 150},
+                {x1: 100, y1: 150, x2: 300, y2: 150},
+                {x1: 100, y1: 150, x2: 200, y2: 50},
+                {x1: 300, y1: 150, x2: 200, y2: 50},
+                {x1: 170, y1: 300, x2: 170, y2: 230},
+                {x1: 230, y1: 300, x2: 230, y2: 230},
+                {x1: 170, y1: 230, x2: 230, y2: 230}
+            ];
+            state.word = 'HOUSE';
+
+            let lineIdx = 0;
+            if (soloInterval) clearInterval(soloInterval);
+            soloInterval = setInterval(() => {
+                if (lineIdx >= lines.length) {
+                    clearInterval(soloInterval);
+                    return;
+                }
+                const l = lines[lineIdx++];
+                ctx.beginPath();
+                ctx.moveTo(l.x1, l.y1);
+                ctx.lineTo(l.x2, l.y2);
+                ctx.stroke();
+            }, 1500);
+        }
+
+        // ── FLAPPY BIRD ───────────────────────────────
+        let flappyCanvas = null;
+        let flappyCtx = null;
+        let flappyAnimationId = null;
+        let flappyState = null;
+
+        function renderFlappy(state) {
+            currentGame.state = state;
+            document.getElementById('game-turn-badge').textContent = '🐦 Tap Space or Click to Jump!';
+            document.getElementById('game-turn-badge').className = 'badge badge-lime';
+
+            document.getElementById('game-main').innerHTML = `
+    <div style="flex:1;padding:20px;display:flex;flex-direction:column;align-items:center">
+      <div class="game-canvas-container" style="max-width:500px;aspect-ratio:1;position:relative">
+        <canvas id="flappy-canvas" class="game-canvas" width="500" height="500"></canvas>
+        <div id="flappy-start-overlay" class="game-overlay">
+          <div class="text-white text-xl font-bold mb-2">🐦 Flappy Bird</div>
+          <p class="text-sm mb-4" style="color:var(--text2)">Press Space or Click canvas to start!</p>
+          <button class="btn btn-primary" onclick="startFlappyGameLoop()">Play Now</button>
+        </div>
+      </div>
+    </div>
+  `;
+
+            setTimeout(initFlappyGame, 50);
+        }
+
+        function initFlappyGame() {
+            flappyCanvas = document.getElementById('flappy-canvas');
+            if (!flappyCanvas) return;
+            flappyCtx = flappyCanvas.getContext('2d');
+            flappyCanvas.addEventListener('mousedown', flapFlappyBird);
+            window.addEventListener('keydown', handleFlappyKey);
+
+            flappyState = {
+                birds: [
+                    { id: currentUser?.id || 'player-1', name: currentUser?.username || 'Player', y: 250, vy: 0, score: 0, dead: false, color: '#3b82f6' },
+                    { id: 'bot-1', name: 'Bot 🤖', y: 250, vy: 0, score: 0, dead: false, color: '#ef4444' }
+                ],
+                pipes: [],
+                pipeTimer: 0,
+                frame: 0,
+                started: false,
+                gameOver: false
+            };
+            drawFlappyScene();
+        }
+
+        function handleFlappyKey(e) {
+            if (e.key === ' ' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                flapFlappyBird();
+            }
+        }
+
+        function flapFlappyBird() {
+            if (!flappyState) return;
+            if (!flappyState.started && !flappyState.gameOver) {
+                flappyState.started = true;
+                const overlay = document.getElementById('flappy-start-overlay');
+                if (overlay) overlay.classList.add('hidden');
+                runFlappyLoop();
+                return;
+            }
+
+            const playerBird = flappyState.birds.find(b => b.id === (currentUser?.id || 'player-1'));
+            if (playerBird && !playerBird.dead) {
+                playerBird.vy = -5.5;
+            }
+        }
+
+        function runFlappyLoop() {
+            if (!flappyState || !flappyState.started || flappyState.gameOver) return;
+
+            const ctx = flappyCtx;
+            const W = flappyCanvas.width;
+            const H = flappyCanvas.height;
+
+            flappyState.frame++;
+            ctx.fillStyle = '#70c5ce';
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+            for (let i = 0; i < 4; i++) {
+                const cx = ((i * 180) - (flappyState.frame * 0.5)) % (W + 100) - 50;
+                ctx.beginPath();
+                ctx.arc(cx, 80, 20, 0, Math.PI * 2);
+                ctx.arc(cx + 15, 75, 25, 0, Math.PI * 2);
+                ctx.arc(cx + 30, 80, 20, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            flappyState.pipeTimer++;
+            if (flappyState.pipeTimer > 100) {
+                flappyState.pipeTimer = 0;
+                const gap = 120;
+                const minH = 50;
+                const maxH = H - gap - minH - 100;
+                const topH = Math.floor(Math.random() * (maxH - minH)) + minH;
+                flappyState.pipes.push({
+                    x: W,
+                    topH: topH,
+                    bottomH: H - topH - gap,
+                    gap: gap,
+                    passed: false
+                });
+            }
+
+            ctx.fillStyle = '#73bf2f';
+            flappyState.pipes.forEach(p => {
+                p.x -= 2.2;
+                ctx.fillRect(p.x, 0, 60, p.topH);
+                ctx.strokeStyle = '#558022';
+                ctx.lineWidth = 3;
+                ctx.strokeRect(p.x, 0, 60, p.topH);
+                ctx.fillRect(p.x - 4, p.topH - 20, 68, 20);
+                ctx.strokeRect(p.x - 4, p.topH - 20, 68, 20);
+
+                ctx.fillRect(p.x, H - p.bottomH, 60, p.bottomH);
+                ctx.strokeRect(p.x, H - p.bottomH, 60, p.bottomH);
+                ctx.fillRect(p.x - 4, H - p.bottomH, 68, 20);
+                ctx.strokeRect(p.x - 4, H - p.bottomH, 68, 20);
+            });
+
+            flappyState.pipes = flappyState.pipes.filter(p => p.x > -100);
+
+            const bot = flappyState.birds.find(b => b.id === 'bot-1');
+            if (bot && !bot.dead) {
+                const nextPipe = flappyState.pipes.find(p => p.x + 60 > 100);
+                if (nextPipe) {
+                    const targetY = nextPipe.topH + nextPipe.gap / 2;
+                    let offset = 0;
+                    if (botDifficulty === 'normal') {
+                        offset = Math.sin(flappyState.frame * 0.1) * 35;
+                    } else if (botDifficulty === 'medium') {
+                        offset = Math.sin(flappyState.frame * 0.15) * 15;
+                    }
+                    if (bot.y > targetY + offset && Math.random() < 0.2) {
+                        bot.vy = -5.5;
+                    }
+                } else {
+                    if (bot.y > 250 && Math.random() < 0.25) bot.vy = -5.5;
+                }
+            }
+
+            flappyState.birds.forEach(b => {
+                if (!b.dead) {
+                    b.vy += 0.25;
+                    b.y += b.vy;
+
+                    if (b.y < 0) b.y = 0;
+                    if (b.y > H - 20) {
+                        b.y = H - 20;
+                        b.dead = true;
+                    }
+
+                    flappyState.pipes.forEach(p => {
+                        const bx = 100;
+                        if (bx + 15 > p.x && bx - 15 < p.x + 60) {
+                            if (b.y - 12 < p.topH || b.y + 12 > H - p.bottomH) {
+                                b.dead = true;
+                            }
+                        }
+                        if (p.x + 30 < bx && !p.passed) {
+                            p.passed = true;
+                            b.score++;
+                        }
+                    });
+                }
+
+                ctx.save();
+                ctx.translate(100, b.y);
+                if (b.vy > 0) ctx.rotate(Math.PI / 12);
+                else ctx.rotate(-Math.PI / 12);
+
+                ctx.fillStyle = b.color;
+                ctx.beginPath();
+                ctx.arc(0, 0, 14, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.strokeStyle = '#000';
+                ctx.lineWidth = 1.5;
+                ctx.stroke();
+
+                ctx.fillStyle = '#fff';
+                ctx.beginPath();
+                ctx.arc(6, -4, 4, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.stroke();
+                ctx.fillStyle = '#000';
+                ctx.beginPath();
+                ctx.arc(7, -4, 1.5, 0, Math.PI * 2);
+                ctx.fill();
+
+                ctx.fillStyle = '#f97316';
+                ctx.beginPath();
+                ctx.moveTo(12, -2);
+                ctx.lineTo(20, 2);
+                ctx.lineTo(12, 6);
+                ctx.closePath();
+                ctx.fill();
+                ctx.stroke();
+
+                ctx.restore();
+            });
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 20px sans-serif';
+            ctx.textAlign = 'left';
+            const p1 = flappyState.birds[0];
+            const p2 = flappyState.birds[1];
+            ctx.fillText(`You: ${p1.score}`, 20, 40);
+            ctx.fillText(`Bot: ${p2.score}`, W - 100, 40);
+
+            if (p1.dead && p2.dead) {
+                flappyState.gameOver = true;
+                cancelAnimationFrame(flappyAnimationId);
+                setTimeout(() => {
+                    endSoloGame(p1.score >= p2.score ? p1.id : p2.id);
+                }, 1500);
+                return;
+            }
+            flappyAnimationId = requestAnimationFrame(runFlappyLoop);
+        }
+
+        function drawFlappyScene() {
+            if (!flappyCanvas || !flappyCtx) return;
+            const ctx = flappyCtx;
+            ctx.fillStyle = '#70c5ce';
+            ctx.fillRect(0, 0, flappyCanvas.width, flappyCanvas.height);
+            ctx.fillStyle = '#ded895';
+            ctx.fillRect(0, flappyCanvas.height - 40, flappyCanvas.width, 40);
+        }
+
+        function startFlappyGameLoop() {
+            if (flappyState) {
+                flappyState.started = true;
+                const overlay = document.getElementById('flappy-start-overlay');
+                if (overlay) overlay.classList.add('hidden');
+                runFlappyLoop();
+            }
+        }
+
+        // ── FOOTBALL ──────────────────────────────────
+        let footballCanvas = null;
+        let footballCtx = null;
+        let footballAnimationId = null;
+        let footballState = null;
+
+        function renderFootball(state) {
+            currentGame.state = state;
+            document.getElementById('game-turn-badge').textContent = '⚽ Penalty Shootout! Kick or Save!';
+            document.getElementById('game-turn-badge').className = 'badge badge-lime';
+
+            document.getElementById('game-main').innerHTML = `
+    <div style="flex:1;padding:20px;display:flex;flex-direction:column;align-items:center">
+      <div class="game-canvas-container" style="max-width:600px;aspect-ratio:4/3;position:relative;width:100%">
+        <canvas id="football-canvas" class="game-canvas" width="600" height="450"></canvas>
+        <div id="football-controls-overlay" style="position:absolute;bottom:12px;left:0;right:0;display:flex;justify-content:center;gap:12px;z-index:20"></div>
+      </div>
+    </div>
+  `;
+
+            setTimeout(initFootballGame, 50);
+        }
+
+        function initFootballGame() {
+            footballCanvas = document.getElementById('football-canvas');
+            if (!footballCanvas) return;
+            footballCtx = footballCanvas.getContext('2d');
+
+            footballState = {
+                round: 1,
+                userRole: 'kicker',
+                ballX: 300,
+                ballY: 380,
+                ballTargetX: 300,
+                ballTargetY: 150,
+                ballVX: 0,
+                ballVY: 0,
+                ballRadius: 12,
+                kickFired: false,
+                keeperX: 300,
+                keeperY: 140,
+                keeperTargetX: 300,
+                keeperSpeed: 4,
+                goalScore: { user: 0, bot: 0 },
+                state: 'aiming',
+                aimX: 300,
+                aimVX: 2.5,
+                resultText: '',
+                roundsPlayed: 0
+            };
+            footballCanvas.addEventListener('mousedown', clickFootballAim);
+            runFootballLoop();
+        }
+
+        function clickFootballAim(e) {
+            if (!footballState || footballState.state !== 'aiming' || footballState.userRole !== 'kicker') return;
+            const rect = footballCanvas.getBoundingClientRect();
+            const clickX = ((e.clientX - rect.left) / rect.width) * footballCanvas.width;
+            const clickY = ((e.clientY - rect.top) / rect.height) * footballCanvas.height;
+
+            if (clickY < 250) {
+                footballState.ballTargetX = clickX;
+                footballState.ballTargetY = clickY;
+                fireFootballKick();
+            }
+        }
+
+        function fireFootballKick() {
+            footballState.state = 'kicking';
+            footballState.kickFired = true;
+
+            const dx = footballState.ballTargetX - footballState.ballX;
+            const dy = footballState.ballTargetY - footballState.ballY;
+            const steps = 40;
+            footballState.ballVX = dx / steps;
+            footballState.ballVY = dy / steps;
+
+            const keeperTarget = footballState.ballTargetX;
+            let deviation = 0;
+            if (botDifficulty === 'normal') {
+                deviation = (Math.random() * 150 - 75);
+            } else if (botDifficulty === 'medium') {
+                deviation = (Math.random() * 60 - 30);
+            }
+            footballState.keeperTargetX = Math.max(180, Math.min(420, keeperTarget + deviation));
+        }
+
+        function updateFootballControls() {
+            const ctrl = document.getElementById('football-controls-overlay');
+            if (!ctrl || !footballState) return;
+
+            if (footballState.userRole === 'keeper' && footballState.state === 'aiming') {
+                ctrl.innerHTML = `
+                    <button class="btn btn-primary btn-sm" onclick="moveKeeperLocal(-80)">👈 Jump Left</button>
+                    <button class="btn btn-primary btn-sm" onclick="moveKeeperLocal(0)">🧍 Stay Center</button>
+                    <button class="btn btn-primary btn-sm" onclick="moveKeeperLocal(80)">👉 Jump Right</button>
+                `;
+            } else if (footballState.userRole === 'kicker' && footballState.state === 'aiming') {
+                ctrl.innerHTML = `
+                    <div style="color:#fff;font-size:0.85rem;background:rgba(0,0,0,0.6);padding:6px 12px;border-radius:4px">
+                        🎯 Click inside the goal area to shoot!
+                    </div>
+                `;
+            } else {
+                ctrl.innerHTML = '';
+            }
+        }
+
+        function moveKeeperLocal(offset) {
+            if (!footballState || footballState.userRole !== 'keeper') return;
+            footballState.keeperTargetX = 300 + offset;
+            setTimeout(triggerBotKick, 800);
+        }
+
+        function triggerBotKick() {
+            if (footballState.state !== 'aiming') return;
+            footballState.state = 'kicking';
+            footballState.kickFired = true;
+
+            const targetX = Math.floor(Math.random() * (410 - 190) + 190);
+            const targetY = Math.floor(Math.random() * (220 - 110) + 110);
+
+            footballState.ballTargetX = targetX;
+            footballState.ballTargetY = targetY;
+
+            const dx = targetX - footballState.ballX;
+            const dy = targetY - footballState.ballY;
+            const steps = 40;
+            footballState.ballVX = dx / steps;
+            footballState.ballVY = dy / steps;
+        }
+
+        function runFootballLoop() {
+            if (!footballState || !currentGame) return;
+
+            const ctx = footballCtx;
+            const W = footballCanvas.width;
+            const H = footballCanvas.height;
+
+            ctx.fillStyle = '#22c55e';
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 4;
+            ctx.strokeRect(150, 100, 300, 150);
+
+            ctx.fillStyle = '#f8fafc';
+            ctx.fillRect(144, 90, 8, 160);
+            ctx.fillRect(448, 90, 8, 160);
+            ctx.fillRect(144, 90, 312, 8);
+
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+            ctx.lineWidth = 1.5;
+            for (let x = 150; x < 450; x += 15) {
+                ctx.beginPath(); ctx.moveTo(x, 100); ctx.lineTo(x, 250); ctx.stroke();
+            }
+            for (let y = 100; y < 250; y += 15) {
+                ctx.beginPath(); ctx.moveTo(150, y); ctx.lineTo(450, y); ctx.stroke();
+            }
+
+            ctx.fillStyle = '#16a34a';
+            for (let y = 250; y < H; y += 40) ctx.fillRect(0, y, W, 20);
+
+            updateFootballControls();
+
+            if (footballState.state === 'kicking') {
+                const diff = footballState.keeperTargetX - footballState.keeperX;
+                if (Math.abs(diff) > 2) {
+                    footballState.keeperX += Math.sign(diff) * footballState.keeperSpeed;
+                }
+            }
+
+            ctx.fillStyle = footballState.userRole === 'keeper' ? '#3b82f6' : '#ef4444';
+            ctx.beginPath();
+            ctx.arc(footballState.keeperX, footballState.keeperY, 18, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            ctx.lineWidth = 5;
+            ctx.strokeStyle = '#f59e0b';
+            ctx.beginPath();
+            ctx.moveTo(footballState.keeperX - 18, footballState.keeperY);
+            ctx.lineTo(footballState.keeperX - 35, footballState.keeperY - 10);
+            ctx.moveTo(footballState.keeperX + 18, footballState.keeperY);
+            ctx.lineTo(footballState.keeperX + 35, footballState.keeperY - 10);
+            ctx.stroke();
+
+            if (footballState.state === 'kicking') {
+                footballState.ballX += footballState.ballVX;
+                footballState.ballY += footballState.ballVY;
+                footballState.ballRadius = Math.max(6, footballState.ballRadius - 0.15);
+
+                const dx = footballState.ballX - footballState.keeperX;
+                const dy = footballState.ballY - footballState.keeperY;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+
+                if (dist < (18 + footballState.ballRadius)) {
+                    footballState.state = 'result';
+                    footballState.resultText = '🧤 SAVED!';
+                    finalizeFootballRound(false);
+                } else if (footballState.ballY <= 150) {
+                    footballState.state = 'result';
+                    if (footballState.ballX >= 150 && footballState.ballX <= 450 && footballState.ballY >= 100 && footballState.ballY <= 250) {
+                        footballState.resultText = '⚽ GOAL!! 🎉';
+                        if (footballState.userRole === 'kicker') footballState.goalScore.user++;
+                        else footballState.goalScore.bot++;
+                        finalizeFootballRound(true);
+                    } else {
+                        footballState.resultText = '❌ MISSED!';
+                        finalizeFootballRound(false);
+                    }
+                }
+            }
+
+            ctx.fillStyle = '#ffffff';
+            ctx.beginPath();
+            ctx.arc(footballState.ballX, footballState.ballY, footballState.ballRadius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(footballState.ballX, footballState.ballY, footballState.ballRadius / 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            if (footballState.userRole === 'kicker' && footballState.state === 'aiming') {
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+                ctx.setLineDash([5, 5]);
+                ctx.beginPath();
+                ctx.moveTo(footballState.ballX, footballState.ballY);
+                ctx.lineTo(footballState.aimX, 150);
+                ctx.stroke();
+                ctx.setLineDash([]);
+
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(footballState.aimX, 150, 10, 0, Math.PI * 2);
+                ctx.stroke();
+
+                footballState.aimX += footballState.aimVX;
+                if (footballState.aimX > 420 || footballState.aimX < 180) {
+                    footballState.aimVX = -footballState.aimVX;
+                }
+                footballState.ballTargetX = footballState.aimX;
+                footballState.ballTargetY = 150;
+            }
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`Round: ${footballState.round}/5  |  You: ${footballState.goalScore.user}  |  Bot: ${footballState.goalScore.bot}`, W / 2, 40);
+
+            if (footballState.userRole === 'kicker') ctx.fillText(`Mode: SHOOTING 🎯`, W / 2, 65);
+            else ctx.fillText(`Mode: DEFENDING 🧤`, W / 2, 65);
+
+            if (footballState.state === 'result') {
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+                ctx.fillRect(0, 0, W, H);
+                ctx.fillStyle = '#ffffff';
+                ctx.font = 'bold 36px sans-serif';
+                ctx.fillText(footballState.resultText, W / 2, H / 2);
+            }
+
+            footballAnimationId = requestAnimationFrame(runFootballLoop);
+        }
+
+        function finalizeFootballRound(isGoal) {
+            setTimeout(() => {
+                if (!footballState) return;
+                footballState.roundsPlayed++;
+                if (footballState.roundsPlayed >= 10) {
+                    const winnerId = footballState.goalScore.user >= footballState.goalScore.bot ? currentUser.id : 'bot-1';
+                    endSoloGame(winnerId);
+                } else {
+                    footballState.round = Math.floor(footballState.roundsPlayed / 2) + 1;
+                    footballState.userRole = footballState.userRole === 'kicker' ? 'keeper' : 'kicker';
+                    footballState.ballX = 300;
+                    footballState.ballY = 380;
+                    footballState.ballRadius = 12;
+                    footballState.keeperX = 300;
+                    footballState.keeperTargetX = 300;
+                    footballState.state = 'aiming';
+                }
+            }, 2000);
+        }
+
+        // ── CAR RACING ────────────────────────────────
+        let carCanvas = null;
+        let carCtx = null;
+        let carAnimationId = null;
+        let carState = null;
+
+        function renderCarRace(state) {
+            currentGame.state = state;
+            document.getElementById('game-turn-badge').textContent = '🚗 Race case! Arrow Keys to Steer & Drive!';
+            document.getElementById('game-turn-badge').className = 'badge badge-lime';
+
+            document.getElementById('game-main').innerHTML = `
+    <div style="flex:1;padding:20px;display:flex;flex-direction:column;align-items:center">
+      <div class="game-canvas-container" style="max-width:550px;aspect-ratio:1;width:100%">
+        <canvas id="car-canvas" class="game-canvas" width="550" height="550"></canvas>
+      </div>
+    </div>
+  `;
+
+            setTimeout(initCarRaceGame, 50);
+        }
+
+        function initCarRaceGame() {
+            carCanvas = document.getElementById('car-canvas');
+            if (!carCanvas) return;
+            carCtx = carCanvas.getContext('2d');
+
+            carState = {
+                player: { x: 100, y: 450, angle: 0, speed: 0, maxSpeed: 4.5, accel: 0.15, decel: 0.08, laps: 0, color: '#ef4444' },
+                bot: { x: 100, y: 480, angle: 0, speed: 3.5, targetPathIdx: 0, laps: 0, color: '#3b82f6' },
+                path: [
+                    { x: 100, y: 480 }, { x: 450, y: 480 }, { x: 480, y: 450 }, { x: 480, y: 100 },
+                    { x: 450, y: 70 }, { x: 100, y: 70 }, { x: 70, y: 100 }, { x: 70, y: 450 }
+                ],
+                obstacles: [
+                    { x: 250, y: 460, type: 'oil' }, { x: 470, y: 250, type: 'cone' }, { x: 250, y: 80, type: 'oil' }
+                ],
+                keys: {},
+                started: true,
+                lapLimit: 3
+            };
+            window.addEventListener('keydown', handleCarKeyDown);
+            window.addEventListener('keyup', handleCarKeyUp);
+            runCarLoop();
+        }
+
+        function handleCarKeyDown(e) {
+            if (carState && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                e.preventDefault();
+                carState.keys[e.key] = true;
+            }
+        }
+
+        function handleCarKeyUp(e) {
+            if (carState && ['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key)) {
+                carState.keys[e.key] = false;
+            }
+        }
+
+        function runCarLoop() {
+            if (!carState || !currentGame) return;
+
+            const ctx = carCtx;
+            const W = carCanvas.width;
+            const H = carCanvas.height;
+
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.strokeStyle = '#475569';
+            ctx.lineWidth = 100;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+
+            ctx.beginPath();
+            ctx.moveTo(100, 480);
+            ctx.lineTo(450, 480);
+            ctx.quadraticCurveTo(480, 480, 480, 450);
+            ctx.lineTo(480, 100);
+            ctx.quadraticCurveTo(480, 70, 450, 70);
+            ctx.lineTo(100, 70);
+            ctx.quadraticCurveTo(70, 70, 70, 100);
+            ctx.lineTo(70, 450);
+            ctx.quadraticCurveTo(70, 480, 100, 480);
+            ctx.stroke();
+
+            ctx.fillStyle = '#15803d';
+            ctx.beginPath();
+            ctx.ellipse(W / 2, H / 2, 180, 180, 0, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.fillRect(100, 430, 8, 100);
+            ctx.fillStyle = '#000000';
+            ctx.fillRect(100, 430, 4, 50);
+            ctx.fillRect(104, 480, 4, 50);
+
+            carState.obstacles.forEach(o => {
+                if (o.type === 'oil') {
+                    ctx.fillStyle = '#0f172a';
+                    ctx.beginPath();
+                    ctx.arc(o.x, o.y, 14, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillStyle = '#334155';
+                    ctx.fillText('💧', o.x - 7, o.y + 4);
+                } else {
+                    ctx.fillStyle = '#f97316';
+                    ctx.font = '14px sans-serif';
+                    ctx.fillText('🚧', o.x - 7, o.y + 7);
+                }
+            });
+
+            const p = carState.player;
+            if (carState.keys['ArrowUp']) {
+                p.speed = Math.min(p.speed + p.accel, p.maxSpeed);
+            } else if (carState.keys['ArrowDown']) {
+                p.speed = Math.max(p.speed - p.accel, -p.maxSpeed / 2);
+            } else {
+                if (p.speed > 0) p.speed = Math.max(0, p.speed - p.decel);
+                else p.speed = Math.min(0, p.speed + p.decel);
+            }
+
+            if (carState.keys['ArrowLeft']) p.angle -= 0.05 * (p.speed / p.maxSpeed);
+            if (carState.keys['ArrowRight']) p.angle += 0.05 * (p.speed / p.maxSpeed);
+
+            const prevX = p.x;
+            p.x += p.speed * Math.cos(p.angle);
+            p.y += p.speed * Math.sin(p.angle);
+
+            if (prevX < 100 && p.x >= 100 && p.y > 400) {
+                p.laps++;
+                toast(`Lap ${p.laps} Completed!`, 'success');
+                if (p.laps >= carState.lapLimit) {
+                    endSoloGame(currentUser.id);
+                    return;
+                }
+            }
+
+            carState.obstacles.forEach(o => {
+                const dx = p.x - o.x;
+                const dy = p.y - o.y;
+                if (Math.sqrt(dx * dx + dy * dy) < 20) {
+                    if (o.type === 'oil') {
+                        p.speed *= 0.85;
+                        p.angle += 0.1;
+                    } else {
+                        p.speed = -1;
+                    }
+                }
+            });
+
+            const b = carState.bot;
+            const speedLimit = botDifficulty === 'hard' ? 4.2 : botDifficulty === 'medium' ? 3.3 : 2.5;
+            const targetNode = carState.path[b.targetPathIdx];
+            const tdx = targetNode.x - b.x;
+            const tdy = targetNode.y - b.y;
+            const dist = Math.sqrt(tdx * tdx + tdy * tdy);
+
+            if (dist < 30) b.targetPathIdx = (b.targetPathIdx + 1) % carState.path.length;
+            b.angle = Math.atan2(tdy, tdx);
+
+            const prevBotX = b.x;
+            b.x += speedLimit * Math.cos(b.angle);
+            b.y += speedLimit * Math.sin(b.angle);
+
+            if (prevBotX < 100 && b.x >= 100 && b.y > 400) {
+                b.laps++;
+                if (b.laps >= carState.lapLimit) {
+                    endSoloGame('bot-1');
+                    return;
+                }
+            }
+
+            drawCar(p.x, p.y, p.angle, p.color);
+            drawCar(b.x, b.y, b.angle, b.color);
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Lap: ${p.laps}/${carState.lapLimit}`, 20, 30);
+            ctx.fillText(`Speed: ${(p.speed * 20).toFixed(0)} km/h`, 20, 55);
+
+            ctx.textAlign = 'right';
+            ctx.fillText(`Bot Laps: ${b.laps}/${carState.lapLimit}`, W - 20, 30);
+
+            carAnimationId = requestAnimationFrame(runCarLoop);
+        }
+
+        function drawCar(x, y, angle, color) {
+            const ctx = carCtx;
+            ctx.save();
+            ctx.translate(x, y);
+            ctx.rotate(angle);
+
+            ctx.fillStyle = color;
+            ctx.fillRect(-15, -8, 30, 16);
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1.5;
+            ctx.strokeRect(-15, -8, 30, 16);
+
+            ctx.fillStyle = '#1e293b';
+            ctx.fillRect(-10, -11, 6, 3);
+            ctx.fillRect(4, -11, 6, 3);
+            ctx.fillRect(-10, 8, 6, 3);
+            ctx.fillRect(4, 8, 6, 3);
+
+            ctx.fillStyle = '#38bdf8';
+            ctx.fillRect(0, -6, 6, 12);
+            ctx.restore();
+        }
+
+        // ── COLOR SWITCH ──────────────────────────────
+        let csCanvas = null;
+        let csCtx = null;
+        let csAnimationId = null;
+        let csState = null;
+
+        function renderColorSwitch(state) {
+            currentGame.state = state;
+            document.getElementById('game-turn-badge').textContent = '🎨 Tap Space to Bounce through matching color!';
+            document.getElementById('game-turn-badge').className = 'badge badge-lime';
+
+            document.getElementById('game-main').innerHTML = `
+    <div style="flex:1;padding:20px;display:flex;flex-direction:column;align-items:center">
+      <div class="game-canvas-container" style="max-width:400px;aspect-ratio:3/4;width:100%">
+        <canvas id="colorswitch-canvas" class="game-canvas" width="400" height="530"></canvas>
+      </div>
+    </div>
+  `;
+
+            setTimeout(initColorSwitchGame, 50);
+        }
+
+        function initColorSwitchGame() {
+            csCanvas = document.getElementById('colorswitch-canvas');
+            if (!csCanvas) return;
+            csCtx = csCanvas.getContext('2d');
+
+            csState = {
+                ball: { x: 200, y: 400, vy: 0, radius: 10, colorIndex: 0, color: '#ef4444' },
+                colors: ['#ef4444', '#3b82f6', '#22c55e', '#eab308'],
+                ring: { x: 200, y: 200, radius: 70, thickness: 16, angle: 0, speed: 0.02 },
+                switcher: { x: 200, y: 200, radius: 12, active: true },
+                score: 0,
+                started: false,
+                gameOver: false
+            };
+            window.addEventListener('keydown', handleCSKey);
+            csCanvas.addEventListener('mousedown', jumpCSBall);
+            runCSLoop();
+        }
+
+        function handleCSKey(e) {
+            if (e.key === ' ' || e.key === 'ArrowUp') {
+                e.preventDefault();
+                jumpCSBall();
+            }
+        }
+
+        function jumpCSBall() {
+            if (!csState) return;
+            csState.started = true;
+            csState.ball.vy = -5.0;
+        }
+
+        function runCSLoop() {
+            if (!csState || !currentGame) return;
+
+            const ctx = csCtx;
+            const W = csCanvas.width;
+            const H = csCanvas.height;
+
+            ctx.fillStyle = '#0f172a';
+            ctx.fillRect(0, 0, W, H);
+
+            const b = csState.ball;
+            const r = csState.ring;
+            const colors = csState.colors;
+
+            if (csState.started && !csState.gameOver) {
+                b.vy += 0.22;
+                b.y += b.vy;
+
+                if (b.y < b.radius) { b.y = b.radius; b.vy = 0; }
+                if (b.y > H - b.radius) triggerCSGameOver();
+                r.angle += r.speed;
+            }
+
+            ctx.lineWidth = r.thickness;
+            for (let i = 0; i < 4; i++) {
+                ctx.strokeStyle = colors[i];
+                ctx.beginPath();
+                const startAngle = r.angle + (i * Math.PI / 2);
+                const endAngle = startAngle + (Math.PI / 2);
+                ctx.arc(r.x, r.y, r.radius, startAngle, endAngle);
+                ctx.stroke();
+
+                if (csState.started && !csState.gameOver) {
+                    const distToRing = Math.abs(Math.sqrt((b.x - r.x) * (b.x - r.x) + (b.y - r.y) * (b.y - r.y)) - r.radius);
+                    if (distToRing < (b.radius + r.thickness / 2)) {
+                        let ballAngle = Math.atan2(b.y - r.y, b.x - r.x);
+                        if (ballAngle < 0) ballAngle += Math.PI * 2;
+
+                        let normalizedStart = startAngle % (Math.PI * 2);
+                        if (normalizedStart < 0) normalizedStart += Math.PI * 2;
+                        let normalizedEnd = endAngle % (Math.PI * 2);
+                        if (normalizedEnd < 0) normalizedEnd += Math.PI * 2;
+
+                        let isInsideArc = false;
+                        if (normalizedStart < normalizedEnd) {
+                            isInsideArc = ballAngle >= normalizedStart && ballAngle <= normalizedEnd;
+                        } else {
+                            isInsideArc = ballAngle >= normalizedStart || ballAngle <= normalizedEnd;
+                        }
+
+                        if (isInsideArc && b.colorIndex !== i) {
+                            triggerCSGameOver();
+                        }
+                    }
+                }
+            }
+
+            if (csState.switcher.active) {
+                ctx.beginPath();
+                ctx.arc(csState.switcher.x, csState.switcher.y, csState.switcher.radius, 0, Math.PI * 2);
+                for (let i = 0; i < 4; i++) {
+                    ctx.fillStyle = colors[i];
+                    ctx.beginPath();
+                    ctx.moveTo(csState.switcher.x, csState.switcher.y);
+                    ctx.arc(csState.switcher.x, csState.switcher.y, csState.switcher.radius, i * Math.PI / 2, (i + 1) * Math.PI / 2);
+                    ctx.fill();
+                }
+
+                const dx = b.x - csState.switcher.x;
+                const dy = b.y - csState.switcher.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist < (b.radius + csState.switcher.radius)) {
+                    csState.switcher.active = false;
+                    csState.score++;
+                    let nextCol = b.colorIndex;
+                    while (nextCol === b.colorIndex) nextCol = Math.floor(Math.random() * 4);
+                    b.colorIndex = nextCol;
+                    b.color = colors[nextCol];
+
+                    setTimeout(() => {
+                        csState.switcher.active = true;
+                        r.speed = Math.min(0.05, r.speed + 0.005);
+                    }, 500);
+                }
+            }
+
+            ctx.fillStyle = b.color;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 24px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(`${csState.score}`, W / 2, 60);
+
+            csAnimationId = requestAnimationFrame(runCSLoop);
+        }
+
+        function triggerCSGameOver() {
+            csState.gameOver = true;
+            cancelAnimationFrame(csAnimationId);
+            setTimeout(() => {
+                const win = csState.score >= (botDifficulty === 'hard' ? 12 : botDifficulty === 'medium' ? 7 : 3);
+                endSoloGame(win ? currentUser.id : 'bot-1');
+            }, 1000);
+        }
+
+        // ── MINI GOLF ─────────────────────────────────
+        let mgCanvas = null;
+        let mgCtx = null;
+        let mgAnimationId = null;
+        let mgState = null;
+
+        function renderMiniGolf(state) {
+            currentGame.state = state;
+            document.getElementById('game-turn-badge').textContent = '🏌️ Drag back from ball to Aim & Putt!';
+            document.getElementById('game-turn-badge').className = 'badge badge-lime';
+
+            document.getElementById('game-main').innerHTML = `
+    <div style="flex:1;padding:20px;display:flex;flex-direction:column;align-items:center">
+      <div class="game-canvas-container" style="max-width:500px;aspect-ratio:1;width:100%">
+        <canvas id="golf-canvas" class="game-canvas" width="500" height="500"></canvas>
+      </div>
+    </div>
+  `;
+
+            setTimeout(initMiniGolfGame, 50);
+        }
+
+        function initMiniGolfGame() {
+            mgCanvas = document.getElementById('golf-canvas');
+            if (!mgCanvas) return;
+            mgCtx = mgCanvas.getContext('2d');
+
+            mgState = {
+                holeNum: 1,
+                ball: { x: 100, y: 400, vx: 0, vy: 0, radius: 8, strokes: 0, color: '#ffffff' },
+                botBall: { x: 100, y: 430, vx: 0, vy: 0, radius: 8, strokes: 0, color: '#f87171' },
+                hole: { x: 400, y: 100, radius: 14 },
+                sand: { x: 250, y: 250, r: 40 },
+                walls: [{ x: 150, y: 150, w: 200, h: 20 }],
+                dragging: false,
+                dragStart: { x: 0, y: 0 },
+                dragCurrent: { x: 0, y: 0 },
+                currentPlayer: currentUser?.id || 'player-1'
+            };
+            mgCanvas.addEventListener('mousedown', mgStartDrag);
+            mgCanvas.addEventListener('mousemove', mgDrag);
+            mgCanvas.addEventListener('mouseup', mgEndDrag);
+            runGolfLoop();
+        }
+
+        function mgStartDrag(e) {
+            if (!mgState || mgState.ball.vx !== 0 || mgState.ball.vy !== 0) return;
+            const rect = mgCanvas.getBoundingClientRect();
+            const mx = ((e.clientX - rect.left) / rect.width) * mgCanvas.width;
+            const my = ((e.clientY - rect.top) / rect.height) * mgCanvas.height;
+
+            const dx = mx - mgState.ball.x;
+            const dy = my - mgState.ball.y;
+            if (Math.sqrt(dx * dx + dy * dy) < 25) {
+                mgState.dragging = true;
+                mgState.dragStart = { x: mgState.ball.x, y: mgState.ball.y };
+                mgState.dragCurrent = { x: mx, y: my };
+            }
+        }
+
+        function mgDrag(e) {
+            if (!mgState || !mgState.dragging) return;
+            const rect = mgCanvas.getBoundingClientRect();
+            const mx = ((e.clientX - rect.left) / rect.width) * mgCanvas.width;
+            const my = ((e.clientY - rect.top) / rect.height) * mgCanvas.height;
+            mgState.dragCurrent = { x: mx, y: my };
+        }
+
+        function mgEndDrag() {
+            if (!mgState || !mgState.dragging) return;
+            mgState.dragging = false;
+
+            const dx = mgState.ball.x - mgState.dragCurrent.x;
+            const dy = mgState.ball.y - mgState.dragCurrent.y;
+            mgState.ball.vx = dx * 0.08;
+            mgState.ball.vy = dy * 0.08;
+            mgState.ball.strokes++;
+
+            setTimeout(triggerBotGolfPutt, 3500);
+        }
+
+        function triggerBotGolfPutt() {
+            if (!mgState || mgState.botBall.vx !== 0 || mgState.botBall.vy !== 0) return;
+            const dx = mgState.hole.x - mgState.botBall.x;
+            const dy = mgState.hole.y - mgState.botBall.y;
+
+            let angleOffset = 0;
+            if (botDifficulty === 'normal') angleOffset = (Math.random() * 0.6 - 0.3);
+            else if (botDifficulty === 'medium') angleOffset = (Math.random() * 0.3 - 0.15);
+
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            const speed = Math.min(6, dist * 0.035);
+            const angle = Math.atan2(dy, dx) + angleOffset;
+
+            mgState.botBall.vx = Math.cos(angle) * speed;
+            mgState.botBall.vy = Math.sin(angle) * speed;
+            mgState.botBall.strokes++;
+        }
+
+        function runGolfLoop() {
+            if (!mgState || !currentGame) return;
+
+            const ctx = mgCtx;
+            const W = mgCanvas.width;
+            const H = mgCanvas.height;
+
+            ctx.fillStyle = '#0f766e';
+            ctx.fillRect(0, 0, W, H);
+
+            ctx.fillStyle = '#fef08a';
+            ctx.beginPath();
+            ctx.arc(mgState.sand.x, mgState.sand.y, mgState.sand.r, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#000000';
+            ctx.beginPath();
+            ctx.arc(mgState.hole.x, mgState.hole.y, mgState.hole.radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            ctx.fillStyle = '#ef4444';
+            ctx.beginPath();
+            ctx.moveTo(mgState.hole.x, mgState.hole.y - 10);
+            ctx.lineTo(mgState.hole.x + 12, mgState.hole.y - 16);
+            ctx.lineTo(mgState.hole.x, mgState.hole.y - 22);
+            ctx.fill();
+
+            ctx.strokeStyle = '#ffffff';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(mgState.hole.x, mgState.hole.y);
+            ctx.lineTo(mgState.hole.x, mgState.hole.y - 22);
+            ctx.stroke();
+
+            ctx.fillStyle = '#1e293b';
+            mgState.walls.forEach(w => ctx.fillRect(w.x, w.y, w.w, w.h));
+
+            updateGolfBall(mgState.ball, true);
+            updateGolfBall(mgState.botBall, false);
+
+            if (mgState.dragging) {
+                ctx.strokeStyle = '#f59e0b';
+                ctx.lineWidth = 3;
+                ctx.beginPath();
+                ctx.moveTo(mgState.ball.x, mgState.ball.y);
+                ctx.lineTo(mgState.dragCurrent.x, mgState.dragCurrent.y);
+                ctx.stroke();
+
+                const dx = mgState.ball.x - mgState.dragCurrent.x;
+                const dy = mgState.ball.y - mgState.dragCurrent.y;
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.5)';
+                ctx.lineWidth = 1.5;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.moveTo(mgState.ball.x, mgState.ball.y);
+                ctx.lineTo(mgState.ball.x + dx, mgState.ball.y + dy);
+                ctx.stroke();
+                ctx.setLineDash([]);
+            }
+
+            ctx.fillStyle = '#ffffff';
+            ctx.font = 'bold 16px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.fillText(`Hole: ${mgState.holeNum}/5`, 20, 30);
+            ctx.fillText(`Strokes: ${mgState.ball.strokes}`, 20, 55);
+
+            ctx.textAlign = 'right';
+            ctx.fillText(`Bot Strokes: ${mgState.botBall.strokes}`, W - 20, 30);
+
+            mgAnimationId = requestAnimationFrame(runGolfLoop);
+        }
+
+        function updateGolfBall(ball, isUser) {
+            const ctx = mgCtx;
+            const W = mgCanvas.width;
+            const H = mgCanvas.height;
+
+            ball.x += ball.vx;
+            ball.y += ball.vy;
+
+            let friction = 0.98;
+            const dxSand = ball.x - mgState.sand.x;
+            const dySand = ball.y - mgState.sand.y;
+            if (Math.sqrt(dxSand * dxSand + dySand * dySand) < mgState.sand.r) friction = 0.82;
+
+            ball.vx *= friction;
+            ball.vy *= friction;
+
+            if (Math.sqrt(ball.vx * ball.vx + ball.vy * ball.vy) < 0.1) {
+                ball.vx = 0;
+                ball.vy = 0;
+            }
+
+            if (ball.x < ball.radius) { ball.x = ball.radius; ball.vx = -ball.vx; }
+            if (ball.x > W - ball.radius) { ball.x = W - ball.radius; ball.vx = -ball.vx; }
+            if (ball.y < ball.radius) { ball.y = ball.radius; ball.vy = -ball.vy; }
+            if (ball.y > H - ball.radius) { ball.y = H - ball.radius; ball.vy = -ball.vy; }
+
+            mgState.walls.forEach(w => {
+                if (ball.x + ball.radius > w.x && ball.x - ball.radius < w.x + w.w &&
+                    ball.y + ball.radius > w.y && ball.y - ball.radius < w.y + w.h) {
+                    if (Math.abs(ball.x - (w.x + w.w / 2)) > Math.abs(ball.y - (w.y + w.h / 2))) {
+                        ball.vx = -ball.vx;
+                        ball.x = ball.x < w.x ? w.x - ball.radius : w.x + w.w + ball.radius;
+                    } else {
+                        ball.vy = -ball.vy;
+                        ball.y = ball.y < w.y ? w.y - ball.radius : w.y + w.h + ball.radius;
+                    }
+                }
+            });
+
+            const dxHole = ball.x - mgState.hole.x;
+            const dyHole = ball.y - mgState.hole.y;
+            const distToHole = Math.sqrt(dxHole * dxHole + dyHole * dyHole);
+
+            if (distToHole < mgState.hole.radius - 2) {
+                ball.vx = 0;
+                ball.vy = 0;
+                ball.x = mgState.hole.x;
+                ball.y = mgState.hole.y;
+
+                if (ball.radius > 2) ball.radius -= 0.5;
+                else handleHoleCompleted(isUser);
+            }
+
+            ctx.fillStyle = ball.color;
+            ctx.beginPath();
+            ctx.arc(ball.x, ball.y, ball.radius, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#000000';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+        }
+
+        function handleHoleCompleted(isUser) {
+            toast(isUser ? '⛳ Sunk it! You finished the hole!' : '🤖 Bot finished the hole!', 'success');
+            if (isUser) {
+                setTimeout(() => {
+                    mgState.holeNum++;
+                    if (mgState.holeNum > 5) {
+                        const winnerId = mgState.ball.strokes <= mgState.botBall.strokes ? currentUser.id : 'bot-1';
+                        endSoloGame(winnerId);
+                    } else {
+                        mgState.ball.x = 100;
+                        mgState.ball.y = 400;
+                        mgState.ball.radius = 8;
+                        mgState.botBall.x = 100;
+                        mgState.botBall.y = 430;
+                        mgState.botBall.radius = 8;
+                        mgState.hole.x = Math.floor(Math.random() * 150 + 300);
+                        mgState.hole.y = Math.floor(Math.random() * 100 + 80);
+                        mgState.walls = [
+                            { x: Math.floor(Math.random() * 100 + 100), y: Math.floor(Math.random() * 150 + 150), w: 180, h: 20 }
+                        ];
+                    }
+                }, 1000);
+            }
         }
 
         // ── MODALS ───────────────────────────────────
