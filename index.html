@@ -2361,6 +2361,13 @@
 
         // ── PAGES ────────────────────────────────────
         function showPage(p) {
+            if (['home', 'lobby', 'leaderboard', 'profile'].includes(p)) {
+                cleanupSoloGame();
+                if (currentRoom && socket && socket.connected && currentRoom.code !== 'SOLO') {
+                    socket.emit('leave_room', { code: currentRoom.code });
+                }
+                currentRoom = null;
+            }
             document.querySelectorAll('.page').forEach(el => el.classList.remove('active'));
             document.querySelectorAll('.nav-tab').forEach(el => el.classList.remove('active'));
             document.getElementById(p + '-page')?.classList.add('active');
@@ -3374,7 +3381,7 @@
         }
 
         function drawCannonScene() {
-            if (!cannonCanvas || !cannonCtx) return;
+            if (!cannonCanvas || !cannonCtx || !currentGame || !currentGame.state) return;
             const ctx = cannonCtx;
             const W = cannonCanvas.width;
             const H = cannonCanvas.height;
@@ -3674,6 +3681,10 @@
                 cannonAnimationId = null;
                 drawCannonScene();
                 checkCannonGameOver();
+                const state = currentGame ? currentGame.state : null;
+                if (state && state.players && state.players[0].health > 0 && state.players[1].health > 0) {
+                    renderCannon(state);
+                }
                 return;
             }
             drawCannonScene();
@@ -3752,29 +3763,42 @@
             const state = currentGame.state;
             if (state.currentPlayer !== 'bot-1') return;
 
-            let targetAngle = 45;
-            let targetPower = 60;
+            // Dynamically choose a random target angle for visual variety
+            const targetAngle = Math.floor(Math.random() * 21 + 35); // Random angle between 35 and 55
+            const rad = targetAngle * Math.PI / 180;
+            const sin = Math.sin(rad);
+            const cos = Math.cos(rad);
+            const w = state.wind || 0;
+            const w_acc = w * 0.003;
 
-            const w = state.wind;
-            targetPower += w * 1.5;
+            // Calculate the t^2 needed using ballistic physics equations
+            const numerator = 500 * sin + 20 * cos;
+            const denominator = 0.04 * cos - 0.5 * w_acc * sin;
+            let t2 = denominator > 0 ? (numerator / denominator) : 13000;
+            if (t2 < 0) t2 = 13000;
+            const t = Math.sqrt(t2);
+
+            // Calculate exact power P needed to hit the target at coordinate 100
+            let basePower = (500 + 0.5 * w_acc * t * t) / (0.15 * cos * t);
+            if (isNaN(basePower) || basePower < 10 || basePower > 100) {
+                basePower = 41.3 + 1.61 * w; // Robust linear fallback
+            }
 
             let offset = 0;
             if (botDifficulty === 'normal') {
-                offset = (Math.random() * 16 - 8);
+                offset = (Math.random() * 22 - 11);
             } else if (botDifficulty === 'medium') {
-                offset = (Math.random() * 8 - 4);
+                offset = (Math.random() * 11 - 5.5);
             } else {
-                offset = (Math.random() * 2 - 1);
+                offset = (Math.random() * 2.5 - 1.25);
             }
 
-            targetPower += offset;
+            let targetPower = basePower + offset;
             targetPower = Math.max(10, Math.min(100, targetPower));
-            targetAngle = Math.max(10, Math.min(80, targetAngle + offset / 2));
 
             const startX = 600;
             const targetX = 100;
 
-            const rad = targetAngle * Math.PI / 180;
             const velScale = 0.15;
             let vx = -targetPower * Math.cos(rad) * velScale;
             let vy = -targetPower * Math.sin(rad) * velScale;
@@ -3782,7 +3806,6 @@
             let tx = startX;
             let ty = 390 - 80;
             const g = 0.08;
-            const w_acc = w * 0.003;
 
             let hit = false;
             for (let step = 0; step < 200; step++) {
@@ -4377,10 +4400,47 @@
             const isMe = winnerId === currentUser.id;
             winner.textContent = isMe ? "🥇 You won! Congratulations!" : "🤖 Bot won this time!";
 
-            const state = currentGame.state;
+            let p1Label = `${currentUser.username}:`;
+            let p2Label = `Bot 🤖:`;
+            let p1Score = "0 pts";
+            let p2Score = "0 pts";
+
+            if (currentGame) {
+                const type = currentGame.type;
+                const state = currentGame.state;
+                if (type === 'cannon') {
+                    p1Label = `${currentUser.username} HP:`;
+                    p2Label = `Bot 🤖 HP:`;
+                    p1Score = state && state.players ? `${state.players[0].health} HP` : '0 HP';
+                    p2Score = state && state.players ? `${state.players[1].health} HP` : '0 HP';
+                } else if (type === 'flappy') {
+                    p1Score = flappyState && flappyState.birds ? `${flappyState.birds[0].score} pts` : '0 pts';
+                    p2Score = flappyState && flappyState.birds ? `${flappyState.birds[1].score} pts` : '0 pts';
+                } else if (type === 'football') {
+                    p1Score = footballState ? `${footballState.scores[currentUser.id]} goals` : '0 goals';
+                    p2Score = footballState ? `${footballState.scores['bot-1']} goals` : '0 goals';
+                } else if (type === 'carrace') {
+                    p1Score = carState ? `Lap ${carState.player.laps}` : 'Lap 0';
+                    p2Score = carState ? `Lap ${carState.bot.laps}` : 'Lap 0';
+                } else if (type === 'colorswitch') {
+                    p1Score = csState ? `${csState.score} score` : '0 score';
+                    p2Score = csState ? `${csState.botScore} score` : '0 score';
+                } else if (type === 'minigolf') {
+                    p1Label = `${currentUser.username} Strokes:`;
+                    p2Label = `Bot 🤖 Strokes:`;
+                    p1Score = mgState ? `${mgState.ball.strokes}` : '0';
+                    p2Score = mgState ? `${mgState.botBall.strokes}` : '0';
+                } else if (state && state.scores) {
+                    p1Score = `${state.scores[currentUser.id] || 0} pts`;
+                    p2Score = `${state.scores['bot-1'] || 0} pts`;
+                } else if (state && state.score !== undefined) {
+                    p1Score = `${state.score} pts`;
+                }
+            }
+
             scoresDiv.innerHTML = `
-                <div style="color:var(--text2);margin:4px 0">${currentUser.username}: <b style="color:var(--lime)">${state.scores ? state.scores[currentUser.id] || 0 : state.score || 0} pts</b></div>
-                <div style="color:var(--text2);margin:4px 0">Bot 🤖: <b style="color:var(--lime)">${state.scores ? state.scores['bot-1'] || 0 : ''} pts</b></div>
+                <div style="color:var(--text2);margin:4px 0">${p1Label} <b style="color:var(--lime)">${p1Score}</b></div>
+                <div style="color:var(--text2);margin:4px 0">${p2Label} <b style="color:var(--lime)">${p2Score}</b></div>
             `;
             screen.classList.remove('hidden');
         }
