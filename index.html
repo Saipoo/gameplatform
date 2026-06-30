@@ -1212,29 +1212,57 @@
             background: rgba(124, 58, 237, .1)
         }
 
-        /* Crossword */
-        .crossword-grid {
-            display: inline-grid;
-            gap: 2px;
-            border: 2px solid var(--text2);
-            margin: 0 auto
+        /* Crossword CSS */
+        .crossword-wrapper {
+            display: flex;
+            flex-direction: row;
+            gap: 32px;
+            width: 100%;
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 24px;
+            background: var(--bg2);
+            border-radius: var(--radius2);
+            border: 1px solid var(--border);
+            box-shadow: var(--shadow);
+            align-items: flex-start;
         }
-
+        @media (max-width: 768px) {
+            .crossword-wrapper {
+                flex-direction: column;
+                align-items: center;
+                gap: 24px;
+            }
+        }
+        .crossword-grid {
+            display: grid;
+            gap: 4px;
+            background: var(--border);
+            padding: 4px;
+            border-radius: var(--radius);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            user-select: none;
+        }
         .crossword-cell {
-            width: 40px;
-            height: 40px;
-            background: var(--text);
+            width: 42px;
+            height: 42px;
+            background: var(--surface);
+            position: relative;
+            border-radius: 4px;
             display: flex;
             align-items: center;
             justify-content: center;
-            position: relative;
-            cursor: pointer
+            transition: all 0.2s ease;
         }
-
         .crossword-cell.black {
-            background: #000
+            background: #090a0f !important;
         }
-
+        .crossword-cell.highlight-word {
+            background: rgba(124, 58, 237, 0.15);
+        }
+        .crossword-cell.highlight-active-cell {
+            background: rgba(124, 58, 237, 0.3) !important;
+        }
         .crossword-cell input {
             width: 100%;
             height: 100%;
@@ -1242,25 +1270,112 @@
             border: none;
             text-align: center;
             font-weight: 700;
-            font-size: 1rem;
-            color: #000;
+            font-size: 1.15rem;
+            color: var(--text);
             text-transform: uppercase;
-            padding: 0
+            outline: none;
+            caret-color: transparent;
+            cursor: pointer;
+            padding: 8px 0 0 0;
         }
-
-        .crossword-cell input:focus {
-            outline: 2px solid var(--violet);
-            background: rgba(124, 58, 237, .1)
+        .crossword-cell input.correct-input {
+            color: var(--lime) !important;
+            font-weight: 800;
+            background: rgba(163, 230, 53, 0.15);
+            border-radius: 4px;
         }
-
+        .crossword-cell input.incorrect-input {
+            color: var(--red) !important;
+            background: rgba(239, 68, 68, 0.1);
+        }
         .cell-num {
             position: absolute;
-            top: 2px;
-            left: 2px;
-            font-size: .55rem;
-            color: var(--text3);
+            top: 3px;
+            left: 4px;
+            font-size: 0.65rem;
+            font-weight: 600;
+            color: var(--text2);
             pointer-events: none;
-            line-height: 1
+            line-height: 1;
+        }
+        .crossword-clues {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            width: 100%;
+            max-height: 460px;
+        }
+        .clue-box {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: var(--radius);
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+            max-height: 220px;
+        }
+        .clue-box h3 {
+            font-size: 0.95rem;
+            font-weight: 700;
+            color: var(--violet2);
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+        }
+        .clues-list {
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            padding-right: 6px;
+        }
+        .clues-list::-webkit-scrollbar {
+            width: 6px;
+        }
+        .clues-list::-webkit-scrollbar-track {
+            background: transparent;
+        }
+        .clues-list::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+        .clues-list::-webkit-scrollbar-thumb:hover {
+            background: var(--text3);
+        }
+        .clue-item {
+            font-size: 0.85rem;
+            color: var(--text);
+            padding: 6px 10px;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            line-height: 1.3;
+        }
+        .clue-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .clue-item.active {
+            background: var(--violet);
+            color: #fff;
+            font-weight: 600;
+            box-shadow: 0 2px 8px rgba(124, 58, 237, 0.3);
+        }
+        .clue-item.completed {
+            text-decoration: line-through;
+            color: var(--text3);
+            opacity: 0.6;
+        }
+        .correct-anim {
+            animation: pulse-correct 0.3s ease-out;
+        }
+        @keyframes pulse-correct {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.15); box-shadow: 0 0 10px rgba(163, 230, 53, 0.6); }
+            100% { transform: scale(1); }
         }
 
         /* Cannon War */
@@ -2338,7 +2453,7 @@
             { id: 'riddle', name: 'Riddles', emoji: '🎪', desc: 'Classic brain-teasing riddles. Solve before your opponents!', cat: 'quiz', players: '2-6', color: '#065f46', bg: 'linear-gradient(135deg,#065f46,#047857)', rules: 'A riddle is shown to all players. Type your answer in the box. First correct answer gets 10 points. Most points after all riddles wins!' },
             { id: 'jumble', name: 'Word Jumble', emoji: '📝', desc: 'Unscramble jumbled letters to make a real word. Race to solve!', cat: 'word', players: '2-6', color: '#831843', bg: 'linear-gradient(135deg,#831843,#be185d)', rules: 'Letters of a word are scrambled. Rearrange them to find the original word. First player to unscramble correctly wins the round!' },
             { id: 'mathquiz', name: 'Math Tricks', emoji: '🔢', desc: 'Math puzzles and trick questions. Quick mental arithmetic!', cat: 'quiz', players: '2-6', color: '#1e3a5f', bg: 'linear-gradient(135deg,#1e3a5f,#1d4ed8)', rules: 'Mental math questions appear. Type your numeric answer and submit. Correct answer earns 10 points. Work through all questions — highest score wins!' },
-            { id: 'crossword', name: 'Crossword', emoji: '📰', desc: 'Collaborative mini crossword puzzle. Fill in the grid!', cat: 'word', players: '2-4', color: '#3f3f46', bg: 'linear-gradient(135deg,#3f3f46,#52525b)', rules: 'Work together or race to fill the crossword. Read the across and down clues. Click a cell to type your letter. Complete the grid to win!' },
+            { id: 'crossword', name: 'Crossword', emoji: '📰', desc: 'Solo general knowledge crossword puzzle. Fill in the grid!', cat: 'word', players: '1', color: '#3f3f46', bg: 'linear-gradient(135deg,#3f3f46,#52525b)', rules: 'Solve the crossword by typing letters. Read Across and Down clues. Correct letters are automatically locked. Fill the grid to win!' },
             { id: 'truth_dare', name: 'Truth or Dare', emoji: '🎯', desc: 'The classic party game — choose truth or dare and see what happens!', cat: 'party', players: '3-8', color: '#7f1d1d', bg: 'linear-gradient(135deg,#7f1d1d,#b91c1c)', rules: 'Each player takes turns choosing TRUTH or DARE. Truth players must answer honestly. Dare players must complete the challenge. All in good fun!' },
             { id: 'drawing', name: 'Draw & Guess', emoji: '🎨', desc: 'One player draws, others guess the word. Like Pictionary!', cat: 'party', players: '3-8', color: '#14532d', bg: 'linear-gradient(135deg,#14532d,#166534)', rules: 'One player is the artist and draws a secret word. Other players type their guesses in the chat. Correct guess earns points for both guesser and artist!' },
             { id: 'flappy', name: 'Flappy Bird', emoji: '🐦', desc: 'Flap through obstacles. Don\'t crash!', cat: 'arcade', players: '2-4', color: '#0f766e', bg: 'linear-gradient(135deg,#0f766e,#0d9488)', rules: 'Tap space or click to flap. Avoid the green pipes! Compete for the highest score or distance. Best score wins!' },
@@ -2427,10 +2542,19 @@
         let soloGameId = null;
         let soloInterval = null;
 
+        // Crossword active states
+        let activeCrosswordWord = null;
+        let currentCrosswordDirection = 'across';
+        let lastFocusedCell = null;
+
         function openSoloSelector(gameId) {
             soloGameId = gameId;
             const g = GAMES.find(x => x.id === gameId);
             if (!g) return;
+            if (gameId === 'crossword') {
+                startSoloGame('normal');
+                return;
+            }
             document.getElementById('solo-title').textContent = `Play vs Bot: ${g.name}`;
             openModal('solo-difficulty-modal');
         }
@@ -2446,21 +2570,25 @@
                 currentUser = { id: 'player-1', username: 'Guest Player', avatar: '🎮', level: 1, xp: 0, wins: 0, losses: 0 };
             }
 
+            const players = [
+                { id: currentUser.id, name: currentUser.username, avatar: currentUser.avatar || '🎮', ready: true }
+            ];
+            if (soloGameId !== 'crossword') {
+                players.push({ id: 'bot-1', name: `Bot 🤖 (${difficulty.toUpperCase()})`, avatar: '🤖', ready: true });
+            }
+
             // Create a fake room and game state
             currentRoom = {
                 code: 'SOLO',
                 gameType: soloGameId,
                 hostId: currentUser.id,
-                maxPlayers: 2,
-                players: [
-                    { id: currentUser.id, name: currentUser.username, avatar: currentUser.avatar || '🎮', ready: true },
-                    { id: 'bot-1', name: `Bot 🤖 (${difficulty.toUpperCase()})`, avatar: '🤖', ready: true }
-                ]
+                maxPlayers: soloGameId === 'crossword' ? 1 : 2,
+                players: players
             };
 
             currentGame = {
                 type: soloGameId,
-                players: [currentUser.id, 'bot-1'],
+                players: soloGameId === 'crossword' ? [currentUser.id] : [currentUser.id, 'bot-1'],
                 state: initSoloGameState(soloGameId)
             };
 
@@ -2567,11 +2695,17 @@
                     break;
 
                 case 'crossword':
-                    state.grid = Array(5).fill(0).map(() => Array(5).fill(''));
-                    state.clues = [
-                        { type: 'across', num: 1, x: 0, y: 0, word: 'APPLE', clue: 'Red or green fruit' },
-                        { type: 'down', num: 1, x: 0, y: 0, word: 'ABOUT', clue: 'Approximately' }
-                    ];
+                    const cwData = generateRandomCrossword();
+                    state.grid = cwData.grid;
+                    state.cellNumbers = cwData.cellNumbers;
+                    state.clues = cwData.clues;
+                    state.answers = cwData.answers;
+                    state.solution = cwData.solution;
+                    state.completedWords = [];
+                    state.scores = { [currentUser.id]: 0 };
+                    activeCrosswordWord = null;
+                    currentCrosswordDirection = 'across';
+                    lastFocusedCell = null;
                     break;
 
                 case 'truth_dare':
@@ -3239,28 +3373,635 @@
         }
 
         // ── CROSSWORD ────────────────────────────────
+        // ── CROSSWORD ────────────────────────────────
+        const CROSSWORD_VOCAB = [
+            { word: 'PARIS', clue: 'Capital city of France' },
+            { word: 'MARS', clue: 'The Red Planet in our solar system' },
+            { word: 'OCEAN', clue: 'Vast body of salt water covering most of Earth' },
+            { word: 'CLOCK', clue: 'Device used to measure and show time' },
+            { word: 'PIZZA', clue: 'Round Italian dish with cheese and tomato sauce' },
+            { word: 'WATER', clue: 'Essential transparent liquid, H2O' },
+            { word: 'CAT', clue: 'Small furry pet that purrs and catches mice' },
+            { word: 'DOG', clue: 'Man\'s best friend, known to bark' },
+            { word: 'COFFEE', clue: 'Popular hot morning caffeine beverage' },
+            { word: 'BANANA', clue: 'Long yellow curved tropical fruit' },
+            { word: 'APPLE', clue: 'Crisp fruit that can be red, green, or yellow' },
+            { word: 'GREEN', clue: 'The color of grass, leaves, and emeralds' },
+            { word: 'CHESS', clue: 'Board game with kings, queens, rooks, and knights' },
+            { word: 'HEART', clue: 'Muscle organ that pumps blood through the body' },
+            { word: 'SUN', clue: 'The bright star at the center of our solar system' },
+            { word: 'MOON', clue: 'Earth\'s natural satellite, shines at night' },
+            { word: 'BIRD', clue: 'Feathered creature that can fly and lay eggs' },
+            { word: 'FISH', clue: 'Scaly aquatic animal with gills and fins' },
+            { word: 'LION', clue: 'Large wild cat often called the King of the Jungle' },
+            { word: 'MILK', clue: 'White liquid produced by cows, rich in calcium' },
+            { word: 'BOOK', clue: 'Written or printed work consisting of pages bound together' },
+            { word: 'TRAIN', clue: 'Vehicle running on a track or railway line' },
+            { word: 'PLANE', clue: 'Flying vehicle with wings and engines' },
+            { word: 'SOCCER', clue: 'Sport played by kicking a round ball into a net' },
+            { word: 'MUSIC', clue: 'Art of combining vocal or instrumental sounds' },
+            { word: 'TEA', clue: 'Hot beverage made by steeping dried leaves' },
+            { word: 'CHINA', clue: 'Asian country with the Great Wall' },
+            { word: 'TOKYO', clue: 'Bustling capital city of Japan' },
+            { word: 'EGYPT', clue: 'North African country home to ancient pyramids' },
+            { word: 'DESERT', clue: 'Extremely dry, sandy land area' },
+            { word: 'SNAKE', clue: 'Legless long reptile that slithers' },
+            { word: 'PIANO', clue: 'Keyboard instrument with 88 black and white keys' },
+            { word: 'GUITAR', clue: 'Six-stringed instrument played by strumming' },
+            { word: 'BREAD', clue: 'Baked food staple made of flour, water, and yeast' },
+            { word: 'CHEESE', clue: 'Yellow or white dairy food made from milk curd' },
+            { word: 'ICE', clue: 'Water frozen solid into a cold block' },
+            { word: 'ROSE', clue: 'Thorny red flower representing romance' },
+            { word: 'RAIN', clue: 'Liquid water drops falling from sky clouds' },
+            { word: 'SNOW', clue: 'Soft white ice crystals falling in cold weather' },
+            { word: 'TREE', clue: 'Tall woody perennial plant with a trunk' },
+            { word: 'RIVER', clue: 'Large natural stream of water flowing to the sea' },
+            { word: 'HONEY', clue: 'Sweet golden syrup made by bees' },
+            { word: 'EARTH', clue: 'Our home planet, third from the Sun' },
+            { word: 'SMILE', clue: 'Happy facial expression showing your teeth' },
+            { word: 'DOCTOR', clue: 'Medical professional trained to heal people' },
+            { word: 'SCHOOL', clue: 'Institution where pupils go to learn' },
+            { word: 'GOLD', clue: 'Precious yellow metal used for jewelry and coins' },
+            { word: 'SILVER', clue: 'Shiny metallic element used for cutlery and medals' },
+            { word: 'COMPUTER', clue: 'Electronic machine used to browse the web and play games' },
+            { word: 'INTERNET', clue: 'Global network of computers connecting the world' }
+        ];
+
+        function generateRandomCrossword() {
+            const GRID_SIZE = 10;
+            for (let attempt = 0; attempt < 100; attempt++) {
+                const grid = Array(GRID_SIZE).fill(null).map(() => Array(GRID_SIZE).fill(null));
+                const placedWords = [];
+                
+                const shuffled = [...CROSSWORD_VOCAB].sort(() => Math.random() - 0.5);
+                
+                // Place first word in middle
+                const first = shuffled[0];
+                const firstDir = Math.random() < 0.5 ? 'across' : 'down';
+                const startRow = firstDir === 'across' ? Math.floor(GRID_SIZE / 2) : Math.floor((GRID_SIZE - first.word.length) / 2);
+                const startCol = firstDir === 'across' ? Math.floor((GRID_SIZE - first.word.length) / 2) : Math.floor(GRID_SIZE / 2);
+                
+                for (let i = 0; i < first.word.length; i++) {
+                    const r = startRow + (firstDir === 'down' ? i : 0);
+                    const c = startCol + (firstDir === 'across' ? i : 0);
+                    grid[r][c] = first.word[i];
+                }
+                placedWords.push({
+                    word: first.word,
+                    clue: first.clue,
+                    row: startRow,
+                    col: startCol,
+                    dir: firstDir
+                });
+                
+                // Place other words
+                for (let k = 1; k < shuffled.length; k++) {
+                    const item = shuffled[k];
+                    const word = item.word;
+                    const clue = item.clue;
+                    
+                    const candidates = [];
+                    for (let r = 0; r < GRID_SIZE; r++) {
+                        for (let c = 0; c < GRID_SIZE; c++) {
+                            for (let dir of ['across', 'down']) {
+                                if (isValidPlacement(grid, word, r, c, dir)) {
+                                    const intersections = countIntersections(grid, word, r, c, dir);
+                                    if (intersections > 0) {
+                                        candidates.push({ r, c, dir, intersections });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    if (candidates.length > 0) {
+                        candidates.sort((a, b) => b.intersections - a.intersections);
+                        const best = candidates[0];
+                        for (let i = 0; i < word.length; i++) {
+                            const row = best.r + (best.dir === 'down' ? i : 0);
+                            const col = best.c + (best.dir === 'across' ? i : 0);
+                            grid[row][col] = word[i];
+                        }
+                        placedWords.push({
+                            word,
+                            clue,
+                            row: best.r,
+                            col: best.c,
+                            dir: best.dir
+                        });
+                    }
+                }
+                
+                if (placedWords.length >= 5) {
+                    return formatCrossword(grid, placedWords);
+                }
+            }
+            return getFallbackCrossword();
+        }
+
+        function isValidPlacement(grid, word, row, col, dir) {
+            const N = grid.length;
+            const len = word.length;
+            
+            if (dir === 'across') {
+                if (col + len > N) return false;
+                if (col - 1 >= 0 && grid[row][col - 1] !== null) return false;
+                if (col + len < N && grid[row][col + len] !== null) return false;
+            } else {
+                if (row + len > N) return false;
+                if (row - 1 >= 0 && grid[row - 1][col] !== null) return false;
+                if (row + len < N && grid[row + len][col] !== null) return false;
+            }
+            
+            let hasIntersection = false;
+            for (let i = 0; i < len; i++) {
+                const r = row + (dir === 'down' ? i : 0);
+                const c = col + (dir === 'across' ? i : 0);
+                const current = grid[r][c];
+                const targetChar = word[i];
+                
+                if (current !== null) {
+                    if (current !== targetChar) return false;
+                    hasIntersection = true;
+                } else {
+                    if (dir === 'across') {
+                        if (r - 1 >= 0 && grid[r - 1][c] !== null) return false;
+                        if (r + 1 < N && grid[r + 1][c] !== null) return false;
+                    } else {
+                        if (c - 1 >= 0 && grid[r][c - 1] !== null) return false;
+                        if (c + 1 < N && grid[r][c + 1] !== null) return false;
+                    }
+                }
+            }
+            return hasIntersection;
+        }
+
+        function countIntersections(grid, word, row, col, dir) {
+            let count = 0;
+            for (let i = 0; i < word.length; i++) {
+                const r = row + (dir === 'down' ? i : 0);
+                const c = col + (dir === 'across' ? i : 0);
+                if (grid[r][c] === word[i]) {
+                    count++;
+                }
+            }
+            return count;
+        }
+
+        function formatCrossword(grid, placedWords) {
+            const N = grid.length;
+            const starts = {};
+            placedWords.forEach(w => {
+                const key = `${w.row},${w.col}`;
+                if (!starts[key]) starts[key] = [];
+                starts[key].push(w);
+            });
+            
+            const startKeys = Object.keys(starts).sort((a, b) => {
+                const [rA, cA] = a.split(',').map(Number);
+                const [rB, cB] = b.split(',').map(Number);
+                if (rA !== rB) return rA - rB;
+                return cA - cB;
+            });
+            
+            let currentNum = 1;
+            const finalClues = { across: [], down: [] };
+            const answers = { across: {}, down: {} };
+            
+            startKeys.forEach(key => {
+                const words = starts[key];
+                let assignedNum = false;
+                words.forEach(w => {
+                    w.num = currentNum;
+                    assignedNum = true;
+                    const clueObj = { num: currentNum, row: w.row, col: w.col, len: w.word.length, clue: w.clue };
+                    if (w.dir === 'across') {
+                        finalClues.across.push(clueObj);
+                        answers.across[currentNum] = w.word;
+                    } else {
+                        finalClues.down.push(clueObj);
+                        answers.down[currentNum] = w.word;
+                    }
+                });
+                if (assignedNum) currentNum++;
+            });
+            
+            const playerGrid = grid.map(row => row.map(cell => cell === null ? '_' : ''));
+            const cellNumbers = Array(N).fill(null).map(() => Array(N).fill(0));
+            placedWords.forEach(w => {
+                cellNumbers[w.row][w.col] = w.num;
+            });
+            
+            return {
+                grid: playerGrid,
+                answers: answers,
+                clues: finalClues,
+                cellNumbers: cellNumbers,
+                solution: grid.map(row => row.map(cell => cell === null ? '_' : cell))
+            };
+        }
+
+        function getFallbackCrossword() {
+            const grid = [
+                ['C', 'A', 'T', null, null, null, null, null, null, null],
+                [null, 'P', null, null, null, null, null, null, null, null],
+                [null, 'P', 'I', 'G', null, null, null, null, null, null],
+                [null, 'L', null, 'O', null, null, null, null, null, null],
+                [null, 'E', 'G', 'G', null, null, null, null, null, null],
+                [null, null, null, null, null, null, null, null, null, null],
+                [null, null, null, null, null, null, null, null, null, null],
+                [null, null, null, null, null, null, null, null, null, null],
+                [null, null, null, null, null, null, null, null, null, null],
+                [null, null, null, null, null, null, null, null, null, null]
+            ];
+            const placedWords = [
+                { word: 'CAT', clue: 'A furry pet that purrs', row: 0, col: 0, dir: 'across' },
+                { word: 'PIG', clue: 'A farm animal that oinks', row: 2, col: 1, dir: 'across' },
+                { word: 'EGG', clue: 'Chicken product, breakfast staple', row: 4, col: 2, dir: 'across' },
+                { word: 'APPLE', clue: 'A fruit with a shiny red/green skin', row: 0, col: 1, dir: 'down' },
+                { word: 'GOD', clue: 'A deity, worshipped being', row: 2, col: 3, dir: 'down' }
+            ];
+            return formatCrossword(grid, placedWords);
+        }
+
         function renderCrossword(state) {
             currentGame.state = state;
-            const cols = state.grid[0].length;
+            const rows = state.solution.length;
+            const cols = state.solution[0].length;
+            
+            let gridHTML = '';
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const isBlack = state.solution[r][c] === '_';
+                    if (isBlack) {
+                        gridHTML += `<div class="crossword-cell black"></div>`;
+                    } else {
+                        const cellNum = state.cellNumbers[r][c];
+                        const val = state.grid[r][c] || '';
+                        const isCorrect = val !== '' && val === state.solution[r][c];
+                        
+                        let isWordHighlight = false;
+                        let isActiveCell = lastFocusedCell && lastFocusedCell.row === r && lastFocusedCell.col === c;
+                        
+                        if (activeCrosswordWord) {
+                            const { dir, num } = activeCrosswordWord;
+                            const clues = dir === 'across' ? state.clues.across : state.clues.down;
+                            const clue = clues.find(cl => cl.num === num);
+                            if (clue) {
+                                if (dir === 'across') {
+                                    if (r === clue.row && c >= clue.col && c < clue.col + clue.len) {
+                                        isWordHighlight = true;
+                                    }
+                                } else {
+                                    if (c === clue.col && r >= clue.row && r < clue.row + clue.len) {
+                                        isWordHighlight = true;
+                                    }
+                                }
+                            }
+                        }
+                        
+                        const extraClasses = [];
+                        if (isCorrect) extraClasses.push('correct-input');
+                        else if (val !== '') extraClasses.push('incorrect-input');
+                        
+                        const wrapperClasses = ['crossword-cell'];
+                        if (isActiveCell) wrapperClasses.push('highlight-active-cell');
+                        else if (isWordHighlight) wrapperClasses.push('highlight-word');
+                        
+                        gridHTML += `
+                            <div class="${wrapperClasses.join(' ')}" data-row="${r}" data-col="${c}" onclick="selectCrosswordCell(${r}, ${c})">
+                                ${cellNum ? `<span class="cell-num">${cellNum}</span>` : ''}
+                                <input id="cw-input-${r}-${c}" maxlength="1" value="${val}" 
+                                    class="${extraClasses.join(' ')}"
+                                    ${isCorrect ? 'disabled' : ''}
+                                    onkeydown="handleCrosswordKey(event, ${r}, ${c})"
+                                    oninput="handleCrosswordInput(event, ${r}, ${c})"
+                                    autocomplete="off"
+                                >
+                            </div>
+                        `;
+                    }
+                }
+            }
+            
+            const acrossCluesHTML = state.clues.across.map(c => {
+                const key = `across-${c.num}`;
+                const isCompleted = state.completedWords.includes(key);
+                const isActive = activeCrosswordWord && activeCrosswordWord.dir === 'across' && activeCrosswordWord.num === c.num;
+                return `
+                    <div class="clue-item ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}" 
+                        onclick="selectCrosswordClue('across', ${c.num})">
+                        <b>${c.num}.</b> ${c.clue} (${c.len})
+                    </div>
+                `;
+            }).join('');
+            
+            const downCluesHTML = state.clues.down.map(c => {
+                const key = `down-${c.num}`;
+                const isCompleted = state.completedWords.includes(key);
+                const isActive = activeCrosswordWord && activeCrosswordWord.dir === 'down' && activeCrosswordWord.num === c.num;
+                return `
+                    <div class="clue-item ${isCompleted ? 'completed' : ''} ${isActive ? 'active' : ''}" 
+                        onclick="selectCrosswordClue('down', ${c.num})">
+                        <b>${c.num}.</b> ${c.clue} (${c.len})
+                    </div>
+                `;
+            }).join('');
+            
             document.getElementById('game-main').innerHTML = `
-    <div style="padding:24px;display:flex;gap:24px;flex-wrap:wrap">
-      <div>
-        <div class="text-sm font-bold mb-2" style="color:var(--text2)">GRID</div>
-        <div class="crossword-grid" style="grid-template-columns:repeat(${cols},40px)">
-          ${state.grid.map((row, ri) => row.map((cell, ci) =>
-                cell === '_' ? `<div class="crossword-cell black"></div>` :
-                    `<div class="crossword-cell"><input maxlength="1" oninput="this.value=this.value.toUpperCase()" style="width:100%;height:100%;background:transparent;border:none;text-align:center;font-weight:700;font-size:1rem;color:#000;text-transform:uppercase"></div>`
-            ).join('')).join('')}
-        </div>
-      </div>
-      <div style="flex:1;min-width:200px">
-        <div class="text-sm font-bold mb-2" style="color:var(--text2)">CLUES — ACROSS</div>
-        ${state.clues.across.map(c => `<div class="text-sm mb-2"><b>${c.num}.</b> ${c.clue}</div>`).join('')}
-        <div class="text-sm font-bold mt-4 mb-2" style="color:var(--text2)">CLUES — DOWN</div>
-        ${state.clues.down.map(c => `<div class="text-sm mb-2"><b>${c.num}.</b> ${c.clue}</div>`).join('')}
-      </div>
-    </div>
-  `;
+                <div class="crossword-wrapper">
+                    <div style="display:flex; flex-direction:column; align-items:center; gap:16px;">
+                        <div class="crossword-grid" style="grid-template-columns: repeat(${cols}, 42px); grid-template-rows: repeat(${rows}, 42px);">
+                            ${gridHTML}
+                        </div>
+                        <div class="text-xs" style="color:var(--text2); text-align:center;">
+                            Use mouse clicks, Arrow keys, or Backspace to navigate. Correct letters automatically lock in place!
+                        </div>
+                    </div>
+                    <div class="crossword-clues">
+                        <div class="clue-box">
+                            <h3>ACROSS <span>→</span></h3>
+                            <div class="clues-list">
+                                ${acrossCluesHTML}
+                            </div>
+                        </div>
+                        <div class="clue-box">
+                            <h3>DOWN <span>↓</span></h3>
+                            <div class="clues-list">
+                                ${downCluesHTML}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+            
+            if (lastFocusedCell) {
+                const input = document.getElementById(`cw-input-${lastFocusedCell.row}-${lastFocusedCell.col}`);
+                if (input && !input.disabled) {
+                    input.focus();
+                    input.setSelectionRange(input.value.length, input.value.length);
+                }
+            }
+            
+            renderScores(state.scores);
+        }
+
+        function selectCrosswordCell(r, c) {
+            lastFocusedCell = { row: r, col: c };
+            
+            let foundClue = findClueForCell(r, c, currentCrosswordDirection);
+            if (foundClue) {
+                activeCrosswordWord = { dir: currentCrosswordDirection, num: foundClue.num };
+            } else {
+                const otherDir = currentCrosswordDirection === 'across' ? 'down' : 'across';
+                foundClue = findClueForCell(r, c, otherDir);
+                if (foundClue) {
+                    currentCrosswordDirection = otherDir;
+                    activeCrosswordWord = { dir: otherDir, num: foundClue.num };
+                }
+            }
+            renderCrossword(currentGame.state);
+        }
+
+        function selectCrosswordClue(dir, num) {
+            currentCrosswordDirection = dir;
+            activeCrosswordWord = { dir, num };
+            
+            const state = currentGame.state;
+            const clues = dir === 'across' ? state.clues.across : state.clues.down;
+            const clue = clues.find(c => c.num === num);
+            if (clue) {
+                lastFocusedCell = { row: clue.row, col: clue.col };
+            }
+            renderCrossword(state);
+        }
+
+        function findClueForCell(r, c, dir) {
+            const state = currentGame.state;
+            const clues = dir === 'across' ? state.clues.across : state.clues.down;
+            return clues.find(clue => {
+                if (dir === 'across') {
+                    return r === clue.row && c >= clue.col && c < clue.col + clue.len;
+                } else {
+                    return c === clue.col && r >= clue.row && r < clue.row + clue.len;
+                }
+            });
+        }
+
+        function handleCrosswordInput(event, r, c) {
+            const state = currentGame.state;
+            const inputElement = event.target;
+            const val = inputElement.value.toUpperCase().trim();
+            
+            if (val === '') {
+                state.grid[r][c] = '';
+                return;
+            }
+            
+            const letter = val[val.length - 1]; // get the last typed character
+            inputElement.value = letter;
+            
+            const solutionLetter = state.solution[r][c];
+            state.grid[r][c] = letter;
+            
+            if (letter === solutionLetter) {
+                inputElement.classList.remove('incorrect-input');
+                inputElement.classList.add('correct-input');
+                inputElement.disabled = true;
+                
+                const parent = inputElement.parentElement;
+                parent.classList.add('correct-anim');
+                setTimeout(() => parent.classList.remove('correct-anim'), 400);
+                
+                state.scores[currentUser.id] += 2;
+                toast('Correct letter! +2 pts', 'success');
+                
+                checkWordCompletions(r, c);
+                focusNextCell(r, c);
+                checkCrosswordGameOver();
+            } else {
+                inputElement.classList.add('incorrect-input');
+                state.scores[currentUser.id] = Math.max(0, state.scores[currentUser.id] - 1);
+                toast('Incorrect letter! -1 pt', 'error');
+            }
+            renderCrossword(state);
+        }
+
+        function handleCrosswordKey(event, r, c) {
+            const state = currentGame.state;
+            const input = event.target;
+            
+            if (event.key === 'Backspace') {
+                if (state.grid[r][c] === state.solution[r][c]) return;
+                
+                if (input.value === '') {
+                    focusPrevCell(r, c);
+                    renderCrossword(state);
+                    event.preventDefault();
+                } else {
+                    state.grid[r][c] = '';
+                    input.value = '';
+                    renderCrossword(state);
+                    event.preventDefault();
+                }
+            } else if (event.key === 'ArrowUp') {
+                navigateGrid(r - 1, c);
+                event.preventDefault();
+            } else if (event.key === 'ArrowDown') {
+                navigateGrid(r + 1, c);
+                event.preventDefault();
+            } else if (event.key === 'ArrowLeft') {
+                navigateGrid(r, c - 1);
+                event.preventDefault();
+            } else if (event.key === 'ArrowRight') {
+                navigateGrid(r, c + 1);
+                event.preventDefault();
+            }
+        }
+
+        function focusNextCell(r, c) {
+            const state = currentGame.state;
+            if (!activeCrosswordWord) return;
+            const { dir, num } = activeCrosswordWord;
+            const clues = dir === 'across' ? state.clues.across : state.clues.down;
+            const clue = clues.find(cl => cl.num === num);
+            if (!clue) return;
+            
+            if (dir === 'across') {
+                for (let nextC = c + 1; nextC < clue.col + clue.len; nextC++) {
+                    if (state.grid[r][nextC] !== state.solution[r][nextC]) {
+                        lastFocusedCell = { row: r, col: nextC };
+                        return;
+                    }
+                }
+            } else {
+                for (let nextR = r + 1; nextR < clue.row + clue.len; nextR++) {
+                    if (state.grid[nextR][c] !== state.solution[nextR][c]) {
+                        lastFocusedCell = { row: nextR, col: c };
+                        return;
+                    }
+                }
+            }
+        }
+
+        function focusPrevCell(r, c) {
+            const state = currentGame.state;
+            if (!activeCrosswordWord) return;
+            const { dir, num } = activeCrosswordWord;
+            const clues = dir === 'across' ? state.clues.across : state.clues.down;
+            const clue = clues.find(cl => cl.num === num);
+            if (!clue) return;
+            
+            if (dir === 'across') {
+                for (let prevC = c - 1; prevC >= clue.col; prevC--) {
+                    if (state.grid[r][prevC] !== state.solution[r][prevC]) {
+                        lastFocusedCell = { row: r, col: prevC };
+                        return;
+                    }
+                }
+            } else {
+                for (let prevR = r - 1; prevR >= clue.row; prevR--) {
+                    if (state.grid[prevR][c] !== state.solution[prevR][c]) {
+                        lastFocusedCell = { row: prevR, col: c };
+                        return;
+                    }
+                }
+            }
+        }
+
+        function navigateGrid(r, c) {
+            const state = currentGame.state;
+            const rows = state.solution.length;
+            const cols = state.solution[0].length;
+            
+            if (r >= 0 && r < rows && c >= 0 && c < cols) {
+                if (state.solution[r][c] !== '_') {
+                    lastFocusedCell = { row: r, col: c };
+                    let clue = findClueForCell(r, c, currentCrosswordDirection);
+                    if (clue) {
+                        activeCrosswordWord = { dir: currentCrosswordDirection, num: clue.num };
+                    } else {
+                        const otherDir = currentCrosswordDirection === 'across' ? 'down' : 'across';
+                        clue = findClueForCell(r, c, otherDir);
+                        if (clue) {
+                            currentCrosswordDirection = otherDir;
+                            activeCrosswordWord = { dir: otherDir, num: clue.num };
+                        }
+                    }
+                    renderCrossword(state);
+                }
+            }
+        }
+
+        function checkWordCompletions(r, c) {
+            const state = currentGame.state;
+            
+            state.clues.across.forEach(clue => {
+                const key = `across-${clue.num}`;
+                if (state.completedWords.includes(key)) return;
+                
+                if (r === clue.row && c >= clue.col && c < clue.col + clue.len) {
+                    let wordIsCorrect = true;
+                    let fullWord = '';
+                    for (let i = 0; i < clue.len; i++) {
+                        const cellVal = state.grid[r][clue.col + i];
+                        const solVal = state.solution[r][clue.col + i];
+                        fullWord += solVal;
+                        if (cellVal !== solVal) {
+                            wordIsCorrect = false;
+                            break;
+                        }
+                    }
+                    if (wordIsCorrect) {
+                        state.completedWords.push(key);
+                        state.scores[currentUser.id] += 10;
+                        toast(`🎉 Completed: "${fullWord}" (+10 pts)!`, 'success');
+                    }
+                }
+            });
+            
+            state.clues.down.forEach(clue => {
+                const key = `down-${clue.num}`;
+                if (state.completedWords.includes(key)) return;
+                
+                if (c === clue.col && r >= clue.row && r < clue.row + clue.len) {
+                    let wordIsCorrect = true;
+                    let fullWord = '';
+                    for (let i = 0; i < clue.len; i++) {
+                        const cellVal = state.grid[clue.row + i][c];
+                        const solVal = state.solution[clue.row + i][c];
+                        fullWord += solVal;
+                        if (cellVal !== solVal) {
+                            wordIsCorrect = false;
+                            break;
+                        }
+                    }
+                    if (wordIsCorrect) {
+                        state.completedWords.push(key);
+                        state.scores[currentUser.id] += 10;
+                        toast(`🎉 Completed: "${fullWord}" (+10 pts)!`, 'success');
+                    }
+                }
+            });
+        }
+
+        function checkCrosswordGameOver() {
+            const state = currentGame.state;
+            let finished = true;
+            for (let r = 0; r < state.solution.length; r++) {
+                for (let c = 0; c < state.solution[r].length; c++) {
+                    if (state.solution[r][c] !== '_' && state.grid[r][c] !== state.solution[r][c]) {
+                        finished = false;
+                        break;
+                    }
+                }
+                if (!finished) break;
+            }
+            if (finished) {
+                setTimeout(() => {
+                    endSoloGame(currentUser.id);
+                }, 800);
+            }
         }
 
         // ── TRUTH OR DARE ────────────────────────────
