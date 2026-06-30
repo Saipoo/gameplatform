@@ -1246,7 +1246,7 @@
         .crossword-cell {
             width: 42px;
             height: 42px;
-            background: var(--surface);
+            background: #ffffff;
             position: relative;
             border-radius: 4px;
             display: flex;
@@ -1255,13 +1255,13 @@
             transition: all 0.2s ease;
         }
         .crossword-cell.black {
-            background: #090a0f !important;
+            background: #090a10 !important;
         }
         .crossword-cell.highlight-word {
-            background: rgba(124, 58, 237, 0.15);
+            background: #e0f2fe !important;
         }
         .crossword-cell.highlight-active-cell {
-            background: rgba(124, 58, 237, 0.3) !important;
+            background: #bae6fd !important;
         }
         .crossword-cell input {
             width: 100%;
@@ -1271,7 +1271,7 @@
             text-align: center;
             font-weight: 700;
             font-size: 1.15rem;
-            color: var(--text);
+            color: #0f172a;
             text-transform: uppercase;
             outline: none;
             caret-color: transparent;
@@ -1279,22 +1279,22 @@
             padding: 8px 0 0 0;
         }
         .crossword-cell input.correct-input {
-            color: var(--lime) !important;
+            color: #15803d !important;
             font-weight: 800;
-            background: rgba(163, 230, 53, 0.15);
+            background: rgba(34, 197, 94, 0.12);
             border-radius: 4px;
         }
         .crossword-cell input.incorrect-input {
-            color: var(--red) !important;
-            background: rgba(239, 68, 68, 0.1);
+            color: #b91c1c !important;
+            background: rgba(220, 38, 38, 0.08);
         }
         .cell-num {
             position: absolute;
             top: 3px;
             left: 4px;
             font-size: 0.65rem;
-            font-weight: 600;
-            color: var(--text2);
+            font-weight: 700;
+            color: #475569;
             pointer-events: none;
             line-height: 1;
         }
